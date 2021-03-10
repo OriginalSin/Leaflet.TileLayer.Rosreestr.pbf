@@ -38,9 +38,10 @@ export default [
         external: ['leaflet'],
         output: { 
             file: 'dist/index.js',
-            format: 'cjs',
+            format: 'iife',
             exports: 'auto',
             sourcemap: true,            
+            name: 'RosreestrPlugin',
             globals: {
                 'leaflet': 'L'
             },            
