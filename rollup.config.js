@@ -15,32 +15,46 @@ export default [
             file: 'public/main.js',
             format: 'iife',
             sourcemap: true,
+            exports: 'auto',
             name: 'Test',
             globals: {
                 'leaflet': 'L'
             },
         },
         plugins: [                      
-            resolve({
-				preferBuiltins: false
-                // customResolveOptions: {
-                    // moduleDirectory: ['node_modules', 'src']
-                // },
-            }),
+            resolve({ preferBuiltins: false }),
             commonjs(),            
-            css({dest: 'public/main.css', minified: false}),
-            // cpy([
-                // {files: 'src/images/*.*', dest: 'public/assets/images'},
-                // {files: 'src/ImageBitmapLoader-worker.js', dest: 'public'},
-            // ]),
-			// babel({ babelHelpers: 'bundled' })
-			
+            css({dest: 'public/main.css', minified: false}),           
             babel({                
                 babelHelpers: 'bundled',
                 extensions: ['.js', '.mjs'],
                 exclude: ['node_modules/@babel/**', 'node_modules/core-js/**'],
-                include: ['example/**', 'src/**']
+                include: ['src/**']
+            }),
+        ],
+    },
+    {
+        input: 'src/TileLayer.Rosreestr.pbf.js', 
+        external: ['leaflet'],
+        output: { 
+            file: 'dist/index.js',
+            format: 'cjs',
+            exports: 'auto',
+            sourcemap: true,            
+            globals: {
+                'leaflet': 'L'
+            },            
+        },
+        plugins: [                      
+            resolve({ preferBuiltins: false }),
+            commonjs(),            
+            babel({
+                babelHelpers: 'bundled',
+                extensions: ['.js', '.mjs'],
+                exclude: ['node_modules/@babel/**', 'node_modules/core-js/**'],
+                include: ['src/**']
             }),
         ],
     },    
+
 ];
