@@ -4,7 +4,7 @@ import Protobuf from 'pbf';
 
 export default L.GridLayer.extend({
     options: {
-		maxZoom: 14
+		//maxZoom: 14
 	},
     createTile: function(coords, done){
         var error;
@@ -21,29 +21,38 @@ export default L.GridLayer.extend({
 			.then(buf => {
 				// console.log('buf', buf);
 				const path = new Path2D();
-				// const t = {};
+				const points = [];
 				const {layers} = new VectorTile(new Protobuf(buf));								
+				// console.log('layers', layers);
 				Object.keys(layers).forEach(k => {
 					const layer = layers[k];
 					const sc = 256 / layer.extent;
 					for (let i = 0; i < layer.length; ++i) {
 						const vf = layer.feature(i);
-						if (vf.type !== 1) {
-							const coordinates = vf.loadGeometry()[0];
-							let p = coordinates.shift();
+						const coords = vf.loadGeometry()[0];
+						let p = coords.shift();
+						if (vf.type === 1) {
+							// points.push({pos: [p.x * sc, p.y * sc], vf});
+						} else {
+							// const coordinates = coords[0];
 							path.moveTo(p.x * sc, p.y * sc);
-							coordinates.forEach((p, i) => {
+							coords.forEach((p, i) => {
 								path.lineTo(p.x * sc, p.y * sc);
 							});
 						}
 					}
 				});				
-				return path;
+				return {points, path};
 			})
-			.then(path => {
+			.then(data => {
+				const {points, path} = data;
+				// console.log('vf', points, path);
 				const ctx = tile.getContext("2d");
 				ctx.strokeStyle = 'red';
 				ctx.stroke(path);
+				// points.forEach(it => {
+					// ctx.strokeText(it.vf.properties._name, it.pos[0], it.pos[1]);
+				// });
 				done('', tile);
 			})
 			.catch(ev => {

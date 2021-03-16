@@ -12,7 +12,9 @@ window.addEventListener('load', async () => {
 
     const testLayer = new PbfLayer({
         template: 'https://pkk5.kosmosnimki.ru/arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/{z}/{y}/{x}.pbf'
-    });
+    }).addTo(map);
+    const testLayer1 = new PbfLayer({
+        template: 'https://pkk5.kosmosnimki.ru/arcgis/rest/services/Hosted/vt_anno_light/VectorTileServer/tile/{z}/{y}/{x}.pbf'
+    }).addTo(map);
 
-    testLayer.addTo(map);
 });
