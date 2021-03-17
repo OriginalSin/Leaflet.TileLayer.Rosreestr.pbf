@@ -1,7 +1,7 @@
 import L from 'leaflet';
 import {VectorTile} from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
-// import 'whatwg-fetch';
+import 'whatwg-fetch';
 import Renderer from './worker/renderer2d.js';
 
 export default L.GridLayer.extend({
