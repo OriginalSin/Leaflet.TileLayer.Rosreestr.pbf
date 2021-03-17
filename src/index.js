@@ -15,11 +15,11 @@ window.addEventListener('load', async () => {
     const layers = [
 		new PbfLayer({
 			dataManager: dataManager,
-			template: 'https://pkk5.kosmosnimki.ru/arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/{z}/{y}/{x}.pbf'
+			template: 'arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/{z}/{y}/{x}.pbf'
 		}).addTo(map),
 		new PbfLayer({
 			dataManager: dataManager,
-			template: 'https://pkk5.kosmosnimki.ru/arcgis/rest/services/Hosted/vt_anno_light/VectorTileServer/tile/{z}/{y}/{x}.pbf'
+			template: 'arcgis/rest/services/Hosted/vt_anno_light/VectorTileServer/tile/{z}/{y}/{x}.pbf'
 		}).addTo(map)
 	];
 

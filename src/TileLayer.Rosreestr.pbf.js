@@ -67,7 +67,7 @@ export default L.GridLayer.extend({
 				.then(res => res.blob())
 				.then(blob => blob.arrayBuffer())
 				.then(buf => {
-					// console.log('buf', buf);
+					console.log('buf', buf);
 					const path = new Path2D();
 					const points = [];
 					const {layers} = new VectorTile(new Protobuf(buf));								
