@@ -1,4 +1,3 @@
-// import 'blob-polyfill';
 import 'path2d-polyfill';
 import {VectorTile} from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
@@ -38,7 +37,6 @@ export default {
 						if (vf.type === 1) {
 							// points.push({pos: [p.x * sc, p.y * sc], vf});
 						} else {
-							// const coordinates = coords[0];
 							path.moveTo(p.x * sc, p.y * sc);
 							coords.forEach((p, i) => {
 								path.lineTo(p.x * sc, p.y * sc);
@@ -65,9 +63,6 @@ export default {
 			});
 	}
 /*
-
-,
-
 	render2dpbf: (ctx, path2d) => {
 		//ctx.beginPath();
 		ctx.strokeStyle = 'blue';
