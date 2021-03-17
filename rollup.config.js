@@ -57,5 +57,30 @@ export default [
             }),
         ],
     },    
-
+    {
+		input: 'src/worker/dataManager.js',
+		output: [            
+			{
+				file: 'public/dataManager.js',
+				format: 'iife',
+				name: 'DataManager',
+				sourcemap: true,
+				globals: {
+					'leaflet': 'L'
+				},
+			}
+		],
+		external: [],
+		plugins: [    
+			resolve({
+				preferBuiltins: false
+			}),
+			commonjs(),            
+			babel({
+				extensions,
+				babelHelpers: 'bundled',
+				include: ['src/**/*'],
+			}),
+		],    
+	}
 ];

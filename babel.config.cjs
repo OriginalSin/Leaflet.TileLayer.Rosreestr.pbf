@@ -3,7 +3,7 @@ const presets = [
         "@babel/env", {    
             "useBuiltIns": "usage",
             "corejs": {
-                "version": "3.8.3",
+                "version": "3.9.1",
                 "proposals": false
             },
             "targets": "ie 10"
