@@ -1,45 +1,13 @@
 import L from 'leaflet';
 import {VectorTile} from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
-import 'whatwg-fetch';
+// import 'whatwg-fetch';
 import Renderer from './worker/renderer2d.js';
 
 export default L.GridLayer.extend({
     options: {
 		//maxZoom: 14
 	},
-	/*
-    initialize: function(options) {
-		L.GridLayer.prototype.initialize.call(this, options);
-		var dataManager = this.options.dataManager;
-		if (dataManager) {
-			var _this = this;
-			dataManager.onmessage = msg => {
-				 console.log('Main dataManager', msg.data, _this._tiles);
-				const data = msg.data || {};
-				const {cmd, id, tKey, items} = data;
-				switch(cmd) {
-					case 'tile':
-						const tile = _this._tiles[tKey];
-						if (id === _this._leaflet_id && tile) {
-							L.Util.requestAnimFrame(L.Util.bind(_this._tileReady, _this, tile.coords, null, tile.el));
-						} else {
-							console.log('Tile not', msg.data, _this._leaflet_id);
-							
-						}
-						// if (data.url === url1) {
-							// done(data.flag ? '' : 'Нет данных', tile1);
-						// }
-						break;
-					default:
-						console.warn('Warning: Bad message from worker ', data);
-						break;
-				}
-
-			};
-		}
-	},
-	*/
     createTile: function(coords, done){
         var error;
 
@@ -60,7 +28,7 @@ export default L.GridLayer.extend({
 				url: url,
 				tKey: this._tileCoordsToKey(coords)
 			}, [offscreen]);
-			// L.Util.requestAnimFrame(L.Util.bind(this._tileReady, this, coords, null, tile));
+			L.Util.requestAnimFrame(L.Util.bind(this._tileReady, this, coords, null, tile));
 
 			// done('', tile);
 		} else {

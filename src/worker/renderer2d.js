@@ -4,6 +4,9 @@ import {VectorTile} from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
 
 function toArrayBuffer(blob) {
+	if (blob.arrayBuffer) {
+		return blob.arrayBuffer();
+	}
 	return new Promise((resolve, reject) => {
 		let reader = new FileReader();
 		reader.addEventListener('loadend', () => {

@@ -12,8 +12,8 @@ window.addEventListener('load', async () => {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-	const prefix = 'https://pkk5.kosmosnimki.ru/';
-	// const prefix = '';
+	// const prefix = 'https://pkk5.kosmosnimki.ru/';
+	const prefix = '';
     const layers = [
 		new PbfLayer({
 			dataManager: dataManager,
