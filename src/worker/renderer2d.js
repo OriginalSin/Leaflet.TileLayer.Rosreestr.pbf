@@ -1,13 +1,24 @@
-import 'blob-polyfill';
+// import 'blob-polyfill';
 import 'path2d-polyfill';
 import {VectorTile} from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
+
+function toArrayBuffer(blob) {
+	return new Promise((resolve, reject) => {
+		let reader = new FileReader();
+		reader.addEventListener('loadend', () => {
+			resolve(reader.result);
+		});
+		reader.addEventListener('error', () => reject());
+		reader.readAsArrayBuffer(blob);
+	});
+}
 
 export default {	
 	drawPBF: (tile, url) => {
 		return fetch(url)
 			.then(res => res.blob())
-			.then(blob => blob.arrayBuffer())
+			.then(toArrayBuffer)
 			.then(buf => {
 				// console.log('buf', buf);
 				const path = new Path2D();
