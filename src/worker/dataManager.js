@@ -343,7 +343,7 @@ onmessage = function(evt) {
 			break;
 		case 'tile':
 			// console.warn('dddddd ', data);
-			drawPBF(canvas, url).then(flag => {
+			Renderer.drawPBF(canvas, url).then(flag => {
 				// console.log('----- dddddd1:', flag);
 				self.postMessage({
 					cmd: 'tile',

@@ -2,6 +2,7 @@ import L from 'leaflet';
 import {VectorTile} from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
 import 'whatwg-fetch';
+import Renderer from './worker/renderer2d.js';
 
 export default L.GridLayer.extend({
     options: {
@@ -63,11 +64,16 @@ export default L.GridLayer.extend({
 
 			// done('', tile);
 		} else {
+			const layer = this;
+			Renderer.drawPBF(tile, url).then(flag => {
+				L.Util.requestAnimFrame(L.Util.bind(layer._tileReady, layer, tile.coords, null, tile.el));
+			});
+			/*
 			fetch(url, { mode: 'cors', credentials: 'include' })
 				.then(res => res.blob())
 				.then(blob => blob.arrayBuffer())
 				.then(buf => {
-					console.log('buf', buf);
+					// console.log('buf', buf);
 					const path = new Path2D();
 					const points = [];
 					const {layers} = new VectorTile(new Protobuf(buf));								
@@ -106,6 +112,7 @@ export default L.GridLayer.extend({
 				.catch(ev => {
 					done('Нет данных', tile);
 				});
+				*/
 		}
         return tile;
     }
