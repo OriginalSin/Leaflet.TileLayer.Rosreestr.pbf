@@ -1,5 +1,7 @@
 import 'blob-polyfill';
 import 'path2d-polyfill';
+import {VectorTile} from '@mapbox/vector-tile';
+import Protobuf from 'pbf';
 
 export default {	
 	drawPBF: (tile, url) => {
@@ -44,6 +46,7 @@ export default {
 				return true;
 			})
 			.catch(ev => {
+				console.log('error', ev);
 				return false;
 			});
 	}

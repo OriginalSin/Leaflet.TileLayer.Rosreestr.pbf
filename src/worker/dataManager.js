@@ -271,7 +271,7 @@ const chkFilters = props => {
 		// return false;
 	// }
 }
-
+/*
 const drawPBF = (tile, url) => {
 	return fetch(url)
 		.then(res => res.blob())
@@ -317,7 +317,7 @@ const drawPBF = (tile, url) => {
 			return false;
 		});
 }
-
+*/
 let renderFlag = false;
 let renderNum = 1;
 let moveendNum = 0;

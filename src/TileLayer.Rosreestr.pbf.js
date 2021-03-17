@@ -66,7 +66,7 @@ export default L.GridLayer.extend({
 		} else {
 			const layer = this;
 			Renderer.drawPBF(tile, url).then(flag => {
-				L.Util.requestAnimFrame(L.Util.bind(layer._tileReady, layer, tile.coords, null, tile.el));
+				L.Util.requestAnimFrame(L.Util.bind(layer._tileReady, layer, coords, null, tile));
 			});
 			/*
 			fetch(url, { mode: 'cors', credentials: 'include' })
