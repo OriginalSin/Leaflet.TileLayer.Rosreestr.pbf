@@ -108,4 +108,4 @@ dist
 public/main.js
 public/main.js.map
 public/main.css
-public/dataManager
+public/dataManager*
