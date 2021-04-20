@@ -17,14 +17,17 @@ window.addEventListener('load', async () => {
     const layers = [
 		new PbfLayer({
 			dataManager: dataManager,
-			template: prefix + 'arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/{z}/{y}/{x}.pbf'
-		}).addTo(map),
+			maxZoom: 11,
+			template: prefix + 'arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=1'
+		}).addTo(map)
+		,
 		new PbfLayer({
 			dataManager: dataManager,
-			template: prefix + 'arcgis/rest/services/Hosted/vt_anno_light/VectorTileServer/tile/{z}/{y}/{x}.pbf'
+			minZoom: 12,
+			template: prefix + 'arcgis/rest/services/Hosted/vt_anno_light/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=1'
 		}).addTo(map)
 	];
-
+//https://pkk.rosreestr.ru/arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/5/10/19.pbf
 	if (dataManager) {
 		dataManager.onmessage = msg => {
 			 // console.log('Main dataManager', msg.data);//, _this._tiles);
