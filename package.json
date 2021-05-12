@@ -8,7 +8,8 @@
     "build": "rollup -c",
     "watch": "rollup -c -w",
     "dev": "npm-run-all --parallel start watch",
-    "start": "http-server -c-1 --proxy https://pkk.rosreestr.ru"
+    "startproxy": "http-server -c-1 --proxy https://pkk.rosreestr.ru",
+    "start": "http-server"
   },
   "author": "",
   "license": "ISC",

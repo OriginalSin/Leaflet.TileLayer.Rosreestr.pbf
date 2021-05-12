@@ -12,21 +12,56 @@ window.addEventListener('load', async () => {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-	// const prefix = 'https://pkk5.kosmosnimki.ru/';
-	const prefix = '';
-    const layers = [
-		new PbfLayer({
+	const zoomHook = function(coords) {
+		var tp = {
+			z: coords.z,
+			x: coords.x,
+			y: coords.y
+		};
+		var d = tp.z - 12;
+		if (d > 0) {
+			tp.z = 12;
+			tp.scale = Math.pow(2, d);
+			tp.x = Math.floor(tp.x / tp.scale);
+			tp.y = Math.floor(tp.y / tp.scale);
+		}
+		// console.log('ddd', coords, tp);
+		return tp;
+	};
+
+	const prefix = 'https://pkk5.kosmosnimki.ru/';
+	// const prefix = 'https://pkk.rosreestr.ru/';
+	// const prefix = '';
+	const lc = L.control.layers({
+		osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?sw=1', {
+				attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+			}).addTo(map)
+	}, {
+		caddivsion: new PbfLayer({
 			dataManager: dataManager,
-			maxZoom: 11,
-			template: prefix + 'arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=1'
-		}).addTo(map)
-		,
-		new PbfLayer({
+			// zoomOffset: 2,
+			zoomHook: zoomHook,
+			template: prefix + 'arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=2'
+		}),
+		vt_anno_light: new PbfLayer({
 			dataManager: dataManager,
 			minZoom: 12,
 			template: prefix + 'arcgis/rest/services/Hosted/vt_anno_light/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=1'
-		}).addTo(map)
-	];
+		})
+	}).addTo(map);
+    // const layers = [
+		// new PbfLayer({
+			// dataManager: dataManager,
+			// maxZoom: 11,
+			// template: prefix + 'arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=1'
+		// }).addTo(map)
+		// ,
+		// new PbfLayer({
+			// dataManager: dataManager,
+			// minZoom: 12,
+			// template: prefix + 'arcgis/rest/services/Hosted/vt_anno_light/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=1'
+		// }).addTo(map)
+	// ];
 //https://pkk.rosreestr.ru/arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/5/10/19.pbf
 	if (dataManager) {
 		dataManager.onmessage = msg => {
