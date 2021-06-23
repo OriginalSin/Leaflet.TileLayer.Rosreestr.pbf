@@ -105,7 +105,7 @@ dist
 # TernJS port file
 .tern-port
 
-public/main.js
-public/main.js.map
-public/main.css
-public/dataManager*
+# public/main.js
+# public/main.js.map
+# public/main.css
+# public/dataManager*

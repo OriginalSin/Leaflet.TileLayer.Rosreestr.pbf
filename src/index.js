@@ -29,24 +29,58 @@ window.addEventListener('load', async () => {
 		return tp;
 	};
 
-	const prefix = 'https://pkk5.kosmosnimki.ru/';
-	// const prefix = 'https://pkk.rosreestr.ru/';
-	// const prefix = '';
+	// const prefix = 'https://pkk5.kosmosnimki.ru/';
+	const prefix = 'https://pkk.rosreestr.ru/';
+	const cadGroup = L.layerGroup([
+		new PbfLayer({
+			zoomHook: zoomHook,
+			template: prefix + 'arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=2'
+		}),
+		L.tileLayer.wms(prefix + 'arcgis/rest/services/PKK6/CadastreObjects/MapServer/export', {
+			attribution: "ПКК © Росреестр",
+			tileSize: 1024,
+			layers:"show:30,27,24,23,22",
+			format:"PNG32",
+			"imageSR": 102100,
+			bboxSR: 102100,
+			f:"image",
+			transparent: true,
+			size:"1024,1024",
+			maxZoom: 22,
+			minZoom: 14,
+			clickable:true
+		})
+	]);
 	const lc = L.control.layers({
 		osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?sw=1', {
 				attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 			}).addTo(map)
 	}, {
+		cadGroup: cadGroup,
 		caddivsion: new PbfLayer({
-			dataManager: dataManager,
+			// dataManager: dataManager,
 			// zoomOffset: 2,
 			zoomHook: zoomHook,
 			template: prefix + 'arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=2'
 		}),
-		vt_anno_light: new PbfLayer({
-			dataManager: dataManager,
-			minZoom: 12,
-			template: prefix + 'arcgis/rest/services/Hosted/vt_anno_light/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=1'
+		// vt_anno_light: new PbfLayer({
+			// dataManager: dataManager,
+			// minZoom: 3,
+			// template: prefix + 'arcgis/rest/services/Hosted/vt_anno_light/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=1'
+		// }),
+		wms: L.tileLayer.wms(prefix + 'arcgis/rest/services/PKK6/CadastreObjects/MapServer/export', {
+			attribution: "ПКК © Росреестр",
+			tileSize: 1024,
+			layers:"show:30,27,24,23,22",
+			format:"PNG32",
+			"imageSR": 102100,
+			bboxSR: 102100,
+			f:"image",
+			transparent: true,
+			size:"1024,1024",
+			maxZoom: 22,
+			minZoom: 14,
+			clickable:true
 		})
 	}).addTo(map);
     // const layers = [
@@ -65,7 +99,7 @@ window.addEventListener('load', async () => {
 //https://pkk.rosreestr.ru/arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/5/10/19.pbf
 	if (dataManager) {
 		dataManager.onmessage = msg => {
-			 // console.log('Main dataManager', msg.data);//, _this._tiles);
+			 console.log('Main dataManager', msg.data);//, _this._tiles);
 			const data = msg.data || {};
 			const {cmd, id, tKey, items} = data;
 			const layer = map._layers[id];
