@@ -6,7 +6,7 @@ import PbfLayer from './TileLayer.Rosreestr.pbf.js';
 window.addEventListener('load', async () => {
     const map = L.map('map', {}).setView([55.45, 37.37], 4);
 
-	const dataManager = L.DomUtil.create('canvas', '').transferControlToOffscreen ? new Worker("dataManager.js") : null;
+	// const dataManager = L.DomUtil.create('canvas', '').transferControlToOffscreen ? new Worker("dataManager.js") : null;
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -48,7 +48,7 @@ window.addEventListener('load', async () => {
 			size:"1024,1024",
 			maxZoom: 22,
 			minZoom: 14,
-			clickable:true
+			// clickable:true
 		})
 	]);
 	const lc = L.control.layers({
@@ -56,32 +56,33 @@ window.addEventListener('load', async () => {
 				attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 			}).addTo(map)
 	}, {
-		cadGroup: cadGroup,
-		caddivsion: new PbfLayer({
+		cadGroup: cadGroup
+		// ,
+		// caddivsion: new PbfLayer({
 			// dataManager: dataManager,
 			// zoomOffset: 2,
-			zoomHook: zoomHook,
-			template: prefix + 'arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=2'
-		}),
+			// zoomHook: zoomHook,
+			// template: prefix + 'arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=2'
+		// }),
 		// vt_anno_light: new PbfLayer({
 			// dataManager: dataManager,
 			// minZoom: 3,
 			// template: prefix + 'arcgis/rest/services/Hosted/vt_anno_light/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=1'
 		// }),
-		wms: L.tileLayer.wms(prefix + 'arcgis/rest/services/PKK6/CadastreObjects/MapServer/export', {
-			attribution: "ПКК © Росреестр",
-			tileSize: 1024,
-			layers:"show:30,27,24,23,22",
-			format:"PNG32",
-			"imageSR": 102100,
-			bboxSR: 102100,
-			f:"image",
-			transparent: true,
-			size:"1024,1024",
-			maxZoom: 22,
-			minZoom: 14,
-			clickable:true
-		})
+		// wms: L.tileLayer.wms(prefix + 'arcgis/rest/services/PKK6/CadastreObjects/MapServer/export', {
+			// attribution: "ПКК © Росреестр",
+			// tileSize: 1024,
+			// layers:"show:30,27,24,23,22",
+			// format:"PNG32",
+			// "imageSR": 102100,
+			// bboxSR: 102100,
+			// f:"image",
+			// transparent: true,
+			// size:"1024,1024",
+			// maxZoom: 22,
+			// minZoom: 14,
+			// clickable:true
+		// })
 	}).addTo(map);
     // const layers = [
 		// new PbfLayer({
@@ -97,6 +98,7 @@ window.addEventListener('load', async () => {
 		// }).addTo(map)
 	// ];
 //https://pkk.rosreestr.ru/arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/5/10/19.pbf
+/*
 	if (dataManager) {
 		dataManager.onmessage = msg => {
 			 console.log('Main dataManager', msg.data);//, _this._tiles);
@@ -128,5 +130,5 @@ window.addEventListener('load', async () => {
 
 		};
 	}
-
+*/
 });

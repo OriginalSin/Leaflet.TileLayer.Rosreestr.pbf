@@ -19241,13 +19241,13 @@
   });
 
   window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
-    var map, dataManager, zoomHook, prefix, cadGroup;
+    var map, zoomHook, prefix, cadGroup;
     return regeneratorRuntime.wrap(function _callee$(_context) {
       while (1) {
         switch (_context.prev = _context.next) {
           case 0:
-            map = leafletSrc.map('map', {}).setView([55.45, 37.37], 4);
-            dataManager = leafletSrc.DomUtil.create('canvas', '').transferControlToOffscreen ? new Worker("dataManager.js") : null;
+            map = leafletSrc.map('map', {}).setView([55.45, 37.37], 4); // const dataManager = L.DomUtil.create('canvas', '').transferControlToOffscreen ? new Worker("dataManager.js") : null;
+
             leafletSrc.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
               attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
@@ -19287,40 +19287,41 @@
               transparent: true,
               size: "1024,1024",
               maxZoom: 22,
-              minZoom: 14,
-              clickable: true
+              minZoom: 14 // clickable:true
+
             })]);
             leafletSrc.control.layers({
               osm: leafletSrc.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?sw=1', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               }).addTo(map)
             }, {
-              cadGroup: cadGroup,
-              caddivsion: new PbfLayer({
-                // dataManager: dataManager,
-                // zoomOffset: 2,
-                zoomHook: zoomHook,
-                template: prefix + 'arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=2'
-              }),
+              cadGroup: cadGroup // ,
+              // caddivsion: new PbfLayer({
+              // dataManager: dataManager,
+              // zoomOffset: 2,
+              // zoomHook: zoomHook,
+              // template: prefix + 'arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=2'
+              // }),
               // vt_anno_light: new PbfLayer({
               // dataManager: dataManager,
               // minZoom: 3,
               // template: prefix + 'arcgis/rest/services/Hosted/vt_anno_light/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=1'
               // }),
-              wms: leafletSrc.tileLayer.wms(prefix + 'arcgis/rest/services/PKK6/CadastreObjects/MapServer/export', {
-                attribution: "ПКК © Росреестр",
-                tileSize: 1024,
-                layers: "show:30,27,24,23,22",
-                format: "PNG32",
-                "imageSR": 102100,
-                bboxSR: 102100,
-                f: "image",
-                transparent: true,
-                size: "1024,1024",
-                maxZoom: 22,
-                minZoom: 14,
-                clickable: true
-              })
+              // wms: L.tileLayer.wms(prefix + 'arcgis/rest/services/PKK6/CadastreObjects/MapServer/export', {
+              // attribution: "ПКК © Росреестр",
+              // tileSize: 1024,
+              // layers:"show:30,27,24,23,22",
+              // format:"PNG32",
+              // "imageSR": 102100,
+              // bboxSR: 102100,
+              // f:"image",
+              // transparent: true,
+              // size:"1024,1024",
+              // maxZoom: 22,
+              // minZoom: 14,
+              // clickable:true
+              // })
+
             }).addTo(map); // const layers = [
             // new PbfLayer({
             // dataManager: dataManager,
@@ -19336,43 +19337,41 @@
             // ];
             //https://pkk.rosreestr.ru/arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/5/10/19.pbf
 
-            if (dataManager) {
-              dataManager.onmessage = function (msg) {
-                console.log('Main dataManager', msg.data); //, _this._tiles);
+            /*
+            	if (dataManager) {
+            		dataManager.onmessage = msg => {
+            			 console.log('Main dataManager', msg.data);//, _this._tiles);
+            			const data = msg.data || {};
+            			const {cmd, id, tKey, items} = data;
+            			const layer = map._layers[id];
+            			switch(cmd) {
+            				case 'tile':
+            					if (layer && layer._tiles[tKey]) {
+            						const tile = layer._tiles[tKey];
+            						
+            					// }
+            					// const layer = _this._tiles[tKey];
+            					// const tile = _this._tiles[tKey];
+            					// if (id === _this._leaflet_id && tile) {
+            						L.Util.requestAnimFrame(L.Util.bind(layer._tileReady, layer, tile.coords, null, tile.el));
+            					} else {
+            						console.log('Tile not', msg.data, layer._leaflet_id);
+            						
+            					}
+            					// if (data.url === url1) {
+            						// done(data.flag ? '' : 'Нет данных', tile1);
+            					// }
+            					break;
+            				default:
+            					console.warn('Warning: Bad message from worker ', data);
+            					break;
+            			}
+            
+            		};
+            	}
+            */
 
-                var data = msg.data || {};
-                var cmd = data.cmd,
-                    id = data.id,
-                    tKey = data.tKey;
-                    data.items;
-                var layer = map._layers[id];
-
-                switch (cmd) {
-                  case 'tile':
-                    if (layer && layer._tiles[tKey]) {
-                      var tile = layer._tiles[tKey]; // }
-                      // const layer = _this._tiles[tKey];
-                      // const tile = _this._tiles[tKey];
-                      // if (id === _this._leaflet_id && tile) {
-
-                      leafletSrc.Util.requestAnimFrame(leafletSrc.Util.bind(layer._tileReady, layer, tile.coords, null, tile.el));
-                    } else {
-                      console.log('Tile not', msg.data, layer._leaflet_id);
-                    } // if (data.url === url1) {
-                    // done(data.flag ? '' : 'Нет данных', tile1);
-                    // }
-
-
-                    break;
-
-                  default:
-                    console.warn('Warning: Bad message from worker ', data);
-                    break;
-                }
-              };
-            }
-
-          case 8:
+          case 6:
           case "end":
             return _context.stop();
         }
