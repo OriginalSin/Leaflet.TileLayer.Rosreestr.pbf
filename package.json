@@ -9,7 +9,8 @@
     "watch": "rollup -c -w",
     "dev": "npm-run-all --parallel start watch",
     "startproxy": "http-server -c-1 --proxy https://pkk.rosreestr.ru",
-    "start": "http-server"
+    "start": "http-server",
+    "starthttps": "http-server -S -C cert.pem -o"
   },
   "author": "",
   "license": "ISC",

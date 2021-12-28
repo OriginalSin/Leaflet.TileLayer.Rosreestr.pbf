@@ -22,99 +22,12 @@
 	  // eslint-disable-next-line no-new-func -- fallback
 	  (function () { return this; })() || Function('return this')();
 
-	var fails = function (exec) {
-	  try {
-	    return !!exec();
-	  } catch (error) {
-	    return true;
-	  }
-	};
-
-	// Detect IE8's incomplete defineProperty implementation
-	var descriptors = !fails(function () {
-	  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
-	  return Object.defineProperty({}, 1, { get: function () { return 7; } })[1] != 7;
-	});
-
-	var isObject = function (it) {
-	  return typeof it === 'object' ? it !== null : typeof it === 'function';
-	};
-
-	var document$2 = global_1.document;
-	// typeof document.createElement is 'object' in old IE
-	var EXISTS = isObject(document$2) && isObject(document$2.createElement);
-
-	var documentCreateElement = function (it) {
-	  return EXISTS ? document$2.createElement(it) : {};
-	};
-
-	// Thank's IE8 for his funny defineProperty
-	var ie8DomDefine = !descriptors && !fails(function () {
-	  // eslint-disable-next-line es/no-object-defineproperty -- requied for testing
-	  return Object.defineProperty(documentCreateElement('div'), 'a', {
-	    get: function () { return 7; }
-	  }).a != 7;
-	});
-
-	var anObject = function (it) {
-	  if (!isObject(it)) {
-	    throw TypeError(String(it) + ' is not an object');
-	  } return it;
-	};
-
-	// `ToPrimitive` abstract operation
-	// https://tc39.es/ecma262/#sec-toprimitive
-	// instead of the ES6 spec version, we didn't implement @@toPrimitive case
-	// and the second argument - flag - preferred type is a string
-	var toPrimitive = function (input, PREFERRED_STRING) {
-	  if (!isObject(input)) return input;
-	  var fn, val;
-	  if (PREFERRED_STRING && typeof (fn = input.toString) == 'function' && !isObject(val = fn.call(input))) return val;
-	  if (typeof (fn = input.valueOf) == 'function' && !isObject(val = fn.call(input))) return val;
-	  if (!PREFERRED_STRING && typeof (fn = input.toString) == 'function' && !isObject(val = fn.call(input))) return val;
-	  throw TypeError("Can't convert object to primitive value");
-	};
-
 	// eslint-disable-next-line es/no-object-defineproperty -- safe
-	var $defineProperty = Object.defineProperty;
-
-	// `Object.defineProperty` method
-	// https://tc39.es/ecma262/#sec-object.defineproperty
-	var f$5 = descriptors ? $defineProperty : function defineProperty(O, P, Attributes) {
-	  anObject(O);
-	  P = toPrimitive(P, true);
-	  anObject(Attributes);
-	  if (ie8DomDefine) try {
-	    return $defineProperty(O, P, Attributes);
-	  } catch (error) { /* empty */ }
-	  if ('get' in Attributes || 'set' in Attributes) throw TypeError('Accessors not supported');
-	  if ('value' in Attributes) O[P] = Attributes.value;
-	  return O;
-	};
-
-	var objectDefineProperty = {
-		f: f$5
-	};
-
-	var createPropertyDescriptor = function (bitmap, value) {
-	  return {
-	    enumerable: !(bitmap & 1),
-	    configurable: !(bitmap & 2),
-	    writable: !(bitmap & 4),
-	    value: value
-	  };
-	};
-
-	var createNonEnumerableProperty = descriptors ? function (object, key, value) {
-	  return objectDefineProperty.f(object, key, createPropertyDescriptor(1, value));
-	} : function (object, key, value) {
-	  object[key] = value;
-	  return object;
-	};
+	var defineProperty$1 = Object.defineProperty;
 
 	var setGlobal = function (key, value) {
 	  try {
-	    createNonEnumerableProperty(global_1, key, value);
+	    defineProperty$1(global_1, key, { value: value, configurable: true, writable: true });
 	  } catch (error) {
 	    global_1[key] = value;
 	  } return value;
@@ -129,68 +42,106 @@
 	(module.exports = function (key, value) {
 	  return sharedStore[key] || (sharedStore[key] = value !== undefined ? value : {});
 	})('versions', []).push({
-	  version: '3.15.1',
+	  version: '3.20.0',
 	  mode: 'global',
 	  copyright: '© 2021 Denis Pushkarev (zloirock.ru)'
 	});
 	});
 
+	var FunctionPrototype$2 = Function.prototype;
+	var bind$3 = FunctionPrototype$2.bind;
+	var call$2 = FunctionPrototype$2.call;
+	var callBind = bind$3 && bind$3.bind(call$2);
+
+	var functionUncurryThis = bind$3 ? function (fn) {
+	  return fn && callBind(call$2, fn);
+	} : function (fn) {
+	  return fn && function () {
+	    return call$2.apply(fn, arguments);
+	  };
+	};
+
+	var TypeError$e = global_1.TypeError;
+
 	// `RequireObjectCoercible` abstract operation
 	// https://tc39.es/ecma262/#sec-requireobjectcoercible
 	var requireObjectCoercible = function (it) {
-	  if (it == undefined) throw TypeError("Can't call method on " + it);
+	  if (it == undefined) throw TypeError$e("Can't call method on " + it);
 	  return it;
 	};
+
+	var Object$4 = global_1.Object;
 
 	// `ToObject` abstract operation
 	// https://tc39.es/ecma262/#sec-toobject
 	var toObject = function (argument) {
-	  return Object(requireObjectCoercible(argument));
+	  return Object$4(requireObjectCoercible(argument));
 	};
 
-	var hasOwnProperty = {}.hasOwnProperty;
+	var hasOwnProperty = functionUncurryThis({}.hasOwnProperty);
 
-	var has$1 = Object.hasOwn || function hasOwn(it, key) {
-	  return hasOwnProperty.call(toObject(it), key);
+	// `HasOwnProperty` abstract operation
+	// https://tc39.es/ecma262/#sec-hasownproperty
+	var hasOwnProperty_1 = Object.hasOwn || function hasOwn(it, key) {
+	  return hasOwnProperty(toObject(it), key);
 	};
 
 	var id = 0;
 	var postfix = Math.random();
+	var toString$1 = functionUncurryThis(1.0.toString);
 
 	var uid = function (key) {
-	  return 'Symbol(' + String(key === undefined ? '' : key) + ')_' + (++id + postfix).toString(36);
+	  return 'Symbol(' + (key === undefined ? '' : key) + ')_' + toString$1(++id + postfix, 36);
 	};
 
-	var path = global_1;
+	// `IsCallable` abstract operation
+	// https://tc39.es/ecma262/#sec-iscallable
+	var isCallable = function (argument) {
+	  return typeof argument == 'function';
+	};
 
-	var aFunction$1 = function (variable) {
-	  return typeof variable == 'function' ? variable : undefined;
+	var aFunction = function (argument) {
+	  return isCallable(argument) ? argument : undefined;
 	};
 
 	var getBuiltIn = function (namespace, method) {
-	  return arguments.length < 2 ? aFunction$1(path[namespace]) || aFunction$1(global_1[namespace])
-	    : path[namespace] && path[namespace][method] || global_1[namespace] && global_1[namespace][method];
+	  return arguments.length < 2 ? aFunction(global_1[namespace]) : global_1[namespace] && global_1[namespace][method];
 	};
 
 	var engineUserAgent = getBuiltIn('navigator', 'userAgent') || '';
 
 	var process$3 = global_1.process;
-	var versions = process$3 && process$3.versions;
+	var Deno = global_1.Deno;
+	var versions = process$3 && process$3.versions || Deno && Deno.version;
 	var v8 = versions && versions.v8;
 	var match, version;
 
 	if (v8) {
 	  match = v8.split('.');
-	  version = match[0] < 4 ? 1 : match[0] + match[1];
-	} else if (engineUserAgent) {
+	  // in old Chrome, versions of V8 isn't V8 = Chrome / 10
+	  // but their correct versions are not interesting for us
+	  version = match[0] > 0 && match[0] < 4 ? 1 : +(match[0] + match[1]);
+	}
+
+	// BrowserFS NodeJS `process` polyfill incorrectly set `.v8` to `0.0`
+	// so check `userAgent` even if `.v8` exists, but 0
+	if (!version && engineUserAgent) {
 	  match = engineUserAgent.match(/Edge\/(\d+)/);
 	  if (!match || match[1] >= 74) {
 	    match = engineUserAgent.match(/Chrome\/(\d+)/);
-	    if (match) version = match[1];
+	    if (match) version = +match[1];
 	  }
 	}
 
-	var engineV8Version = version && +version;
+	var engineV8Version = version;
+
+	var fails = function (exec) {
+	  try {
+	    return !!exec();
+	  } catch (error) {
+	    return true;
+	  }
+	};
 
 	/* eslint-disable es/no-symbol -- required for testing */
 
@@ -215,14 +166,18 @@
 
 	var WellKnownSymbolsStore = shared('wks');
 	var Symbol$1 = global_1.Symbol;
+	var symbolFor = Symbol$1 && Symbol$1['for'];
 	var createWellKnownSymbol = useSymbolAsUid ? Symbol$1 : Symbol$1 && Symbol$1.withoutSetter || uid;
 
 	var wellKnownSymbol = function (name) {
-	  if (!has$1(WellKnownSymbolsStore, name) || !(nativeSymbol || typeof WellKnownSymbolsStore[name] == 'string')) {
-	    if (nativeSymbol && has$1(Symbol$1, name)) {
+	  if (!hasOwnProperty_1(WellKnownSymbolsStore, name) || !(nativeSymbol || typeof WellKnownSymbolsStore[name] == 'string')) {
+	    var description = 'Symbol.' + name;
+	    if (nativeSymbol && hasOwnProperty_1(Symbol$1, name)) {
 	      WellKnownSymbolsStore[name] = Symbol$1[name];
+	    } else if (useSymbolAsUid && symbolFor) {
+	      WellKnownSymbolsStore[name] = symbolFor(description);
 	    } else {
-	      WellKnownSymbolsStore[name] = createWellKnownSymbol('Symbol.' + name);
+	      WellKnownSymbolsStore[name] = createWellKnownSymbol(description);
 	    }
 	  } return WellKnownSymbolsStore[name];
 	};
@@ -234,12 +189,165 @@
 
 	var toStringTagSupport = String(test) === '[object z]';
 
-	var functionToString = Function.toString;
+	// Detect IE8's incomplete defineProperty implementation
+	var descriptors = !fails(function () {
+	  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
+	  return Object.defineProperty({}, 1, { get: function () { return 7; } })[1] != 7;
+	});
+
+	var isObject = function (it) {
+	  return typeof it == 'object' ? it !== null : isCallable(it);
+	};
+
+	var document$3 = global_1.document;
+	// typeof document.createElement is 'object' in old IE
+	var EXISTS$1 = isObject(document$3) && isObject(document$3.createElement);
+
+	var documentCreateElement = function (it) {
+	  return EXISTS$1 ? document$3.createElement(it) : {};
+	};
+
+	// Thank's IE8 for his funny defineProperty
+	var ie8DomDefine = !descriptors && !fails(function () {
+	  // eslint-disable-next-line es/no-object-defineproperty -- requied for testing
+	  return Object.defineProperty(documentCreateElement('div'), 'a', {
+	    get: function () { return 7; }
+	  }).a != 7;
+	});
+
+	var String$5 = global_1.String;
+	var TypeError$d = global_1.TypeError;
+
+	// `Assert: Type(argument) is Object`
+	var anObject = function (argument) {
+	  if (isObject(argument)) return argument;
+	  throw TypeError$d(String$5(argument) + ' is not an object');
+	};
+
+	var call$1 = Function.prototype.call;
+
+	var functionCall = call$1.bind ? call$1.bind(call$1) : function () {
+	  return call$1.apply(call$1, arguments);
+	};
+
+	var objectIsPrototypeOf = functionUncurryThis({}.isPrototypeOf);
+
+	var Object$3 = global_1.Object;
+
+	var isSymbol = useSymbolAsUid ? function (it) {
+	  return typeof it == 'symbol';
+	} : function (it) {
+	  var $Symbol = getBuiltIn('Symbol');
+	  return isCallable($Symbol) && objectIsPrototypeOf($Symbol.prototype, Object$3(it));
+	};
+
+	var String$4 = global_1.String;
+
+	var tryToString = function (argument) {
+	  try {
+	    return String$4(argument);
+	  } catch (error) {
+	    return 'Object';
+	  }
+	};
+
+	var TypeError$c = global_1.TypeError;
+
+	// `Assert: IsCallable(argument) is true`
+	var aCallable = function (argument) {
+	  if (isCallable(argument)) return argument;
+	  throw TypeError$c(tryToString(argument) + ' is not a function');
+	};
+
+	// `GetMethod` abstract operation
+	// https://tc39.es/ecma262/#sec-getmethod
+	var getMethod = function (V, P) {
+	  var func = V[P];
+	  return func == null ? undefined : aCallable(func);
+	};
+
+	var TypeError$b = global_1.TypeError;
+
+	// `OrdinaryToPrimitive` abstract operation
+	// https://tc39.es/ecma262/#sec-ordinarytoprimitive
+	var ordinaryToPrimitive = function (input, pref) {
+	  var fn, val;
+	  if (pref === 'string' && isCallable(fn = input.toString) && !isObject(val = functionCall(fn, input))) return val;
+	  if (isCallable(fn = input.valueOf) && !isObject(val = functionCall(fn, input))) return val;
+	  if (pref !== 'string' && isCallable(fn = input.toString) && !isObject(val = functionCall(fn, input))) return val;
+	  throw TypeError$b("Can't convert object to primitive value");
+	};
+
+	var TypeError$a = global_1.TypeError;
+	var TO_PRIMITIVE = wellKnownSymbol('toPrimitive');
+
+	// `ToPrimitive` abstract operation
+	// https://tc39.es/ecma262/#sec-toprimitive
+	var toPrimitive = function (input, pref) {
+	  if (!isObject(input) || isSymbol(input)) return input;
+	  var exoticToPrim = getMethod(input, TO_PRIMITIVE);
+	  var result;
+	  if (exoticToPrim) {
+	    if (pref === undefined) pref = 'default';
+	    result = functionCall(exoticToPrim, input, pref);
+	    if (!isObject(result) || isSymbol(result)) return result;
+	    throw TypeError$a("Can't convert object to primitive value");
+	  }
+	  if (pref === undefined) pref = 'number';
+	  return ordinaryToPrimitive(input, pref);
+	};
+
+	// `ToPropertyKey` abstract operation
+	// https://tc39.es/ecma262/#sec-topropertykey
+	var toPropertyKey = function (argument) {
+	  var key = toPrimitive(argument, 'string');
+	  return isSymbol(key) ? key : key + '';
+	};
+
+	var TypeError$9 = global_1.TypeError;
+	// eslint-disable-next-line es/no-object-defineproperty -- safe
+	var $defineProperty = Object.defineProperty;
+
+	// `Object.defineProperty` method
+	// https://tc39.es/ecma262/#sec-object.defineproperty
+	var f$5 = descriptors ? $defineProperty : function defineProperty(O, P, Attributes) {
+	  anObject(O);
+	  P = toPropertyKey(P);
+	  anObject(Attributes);
+	  if (ie8DomDefine) try {
+	    return $defineProperty(O, P, Attributes);
+	  } catch (error) { /* empty */ }
+	  if ('get' in Attributes || 'set' in Attributes) throw TypeError$9('Accessors not supported');
+	  if ('value' in Attributes) O[P] = Attributes.value;
+	  return O;
+	};
+
+	var objectDefineProperty = {
+		f: f$5
+	};
+
+	var createPropertyDescriptor = function (bitmap, value) {
+	  return {
+	    enumerable: !(bitmap & 1),
+	    configurable: !(bitmap & 2),
+	    writable: !(bitmap & 4),
+	    value: value
+	  };
+	};
+
+	var createNonEnumerableProperty = descriptors ? function (object, key, value) {
+	  return objectDefineProperty.f(object, key, createPropertyDescriptor(1, value));
+	} : function (object, key, value) {
+	  object[key] = value;
+	  return object;
+	};
+
+	var functionToString = functionUncurryThis(Function.toString);
 
 	// this helper broken in `core-js@3.4.1-3.4.4`, so we can't use `shared` helper
-	if (typeof sharedStore.inspectSource != 'function') {
+	if (!isCallable(sharedStore.inspectSource)) {
 	  sharedStore.inspectSource = function (it) {
-	    return functionToString.call(it);
+	    return functionToString(it);
 	  };
 	}
 
@@ -247,7 +355,7 @@
 
 	var WeakMap$1 = global_1.WeakMap;
 
-	var nativeWeakMap = typeof WeakMap$1 === 'function' && /native code/.test(inspectSource(WeakMap$1));
+	var nativeWeakMap = isCallable(WeakMap$1) && /native code/.test(inspectSource(WeakMap$1));
 
 	var keys = shared('keys');
 
@@ -258,6 +366,7 @@
 	var hiddenKeys$1 = {};
 
 	var OBJECT_ALREADY_INITIALIZED = 'Object already initialized';
+	var TypeError$8 = global_1.TypeError;
 	var WeakMap = global_1.WeakMap;
 	var set$1, get, has;
 
@@ -269,42 +378,42 @@
 	  return function (it) {
 	    var state;
 	    if (!isObject(it) || (state = get(it)).type !== TYPE) {
-	      throw TypeError('Incompatible receiver, ' + TYPE + ' required');
+	      throw TypeError$8('Incompatible receiver, ' + TYPE + ' required');
 	    } return state;
 	  };
 	};
 
 	if (nativeWeakMap || sharedStore.state) {
 	  var store = sharedStore.state || (sharedStore.state = new WeakMap());
-	  var wmget = store.get;
-	  var wmhas = store.has;
-	  var wmset = store.set;
+	  var wmget = functionUncurryThis(store.get);
+	  var wmhas = functionUncurryThis(store.has);
+	  var wmset = functionUncurryThis(store.set);
 	  set$1 = function (it, metadata) {
-	    if (wmhas.call(store, it)) throw new TypeError(OBJECT_ALREADY_INITIALIZED);
+	    if (wmhas(store, it)) throw new TypeError$8(OBJECT_ALREADY_INITIALIZED);
 	    metadata.facade = it;
-	    wmset.call(store, it, metadata);
+	    wmset(store, it, metadata);
 	    return metadata;
 	  };
 	  get = function (it) {
-	    return wmget.call(store, it) || {};
+	    return wmget(store, it) || {};
 	  };
 	  has = function (it) {
-	    return wmhas.call(store, it);
+	    return wmhas(store, it);
 	  };
 	} else {
 	  var STATE = sharedKey('state');
 	  hiddenKeys$1[STATE] = true;
 	  set$1 = function (it, metadata) {
-	    if (has$1(it, STATE)) throw new TypeError(OBJECT_ALREADY_INITIALIZED);
+	    if (hasOwnProperty_1(it, STATE)) throw new TypeError$8(OBJECT_ALREADY_INITIALIZED);
 	    metadata.facade = it;
 	    createNonEnumerableProperty(it, STATE, metadata);
 	    return metadata;
 	  };
 	  get = function (it) {
-	    return has$1(it, STATE) ? it[STATE] : {};
+	    return hasOwnProperty_1(it, STATE) ? it[STATE] : {};
 	  };
 	  has = function (it) {
-	    return has$1(it, STATE);
+	    return hasOwnProperty_1(it, STATE);
 	  };
 	}
 
@@ -316,7 +425,24 @@
 	  getterFor: getterFor
 	};
 
+	var FunctionPrototype$1 = Function.prototype;
+	// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
+	var getDescriptor = descriptors && Object.getOwnPropertyDescriptor;
+
+	var EXISTS = hasOwnProperty_1(FunctionPrototype$1, 'name');
+	// additional protection from minified / mangled / dropped function names
+	var PROPER = EXISTS && (function something() { /* empty */ }).name === 'something';
+	var CONFIGURABLE = EXISTS && (!descriptors || (descriptors && getDescriptor(FunctionPrototype$1, 'name').configurable));
+
+	var functionName = {
+	  EXISTS: EXISTS,
+	  PROPER: PROPER,
+	  CONFIGURABLE: CONFIGURABLE
+	};
+
 	var redefine = createCommonjsModule(function (module) {
+	var CONFIGURABLE_FUNCTION_NAME = functionName.CONFIGURABLE;
+
 	var getInternalState = internalState.get;
 	var enforceInternalState = internalState.enforce;
 	var TEMPLATE = String(String).split('String');
@@ -325,14 +451,18 @@
 	  var unsafe = options ? !!options.unsafe : false;
 	  var simple = options ? !!options.enumerable : false;
 	  var noTargetGet = options ? !!options.noTargetGet : false;
+	  var name = options && options.name !== undefined ? options.name : key;
 	  var state;
-	  if (typeof value == 'function') {
-	    if (typeof key == 'string' && !has$1(value, 'name')) {
-	      createNonEnumerableProperty(value, 'name', key);
+	  if (isCallable(value)) {
+	    if (String(name).slice(0, 7) === 'Symbol(') {
+	      name = '[' + String(name).replace(/^Symbol\(([^)]*)\)/, '$1') + ']';
+	    }
+	    if (!hasOwnProperty_1(value, 'name') || (CONFIGURABLE_FUNCTION_NAME && value.name !== name)) {
+	      createNonEnumerableProperty(value, 'name', name);
 	    }
 	    state = enforceInternalState(value);
 	    if (!state.source) {
-	      state.source = TEMPLATE.join(typeof key == 'string' ? key : '');
+	      state.source = TEMPLATE.join(typeof name == 'string' ? name : '');
 	    }
 	  }
 	  if (O === global_1) {
@@ -348,17 +478,20 @@
 	  else createNonEnumerableProperty(O, key, value);
 	// add fake Function#toString for correct work wrapped methods / constructors with methods like LoDash isNative
 	})(Function.prototype, 'toString', function toString() {
-	  return typeof this == 'function' && getInternalState(this).source || inspectSource(this);
+	  return isCallable(this) && getInternalState(this).source || inspectSource(this);
 	});
 	});
 
-	var toString = {}.toString;
+	var toString = functionUncurryThis({}.toString);
+	var stringSlice$3 = functionUncurryThis(''.slice);
 
 	var classofRaw = function (it) {
-	  return toString.call(it).slice(8, -1);
+	  return stringSlice$3(toString(it), 8, -1);
 	};
 
 	var TO_STRING_TAG$1 = wellKnownSymbol('toStringTag');
+	var Object$2 = global_1.Object;
+
 	// ES3 wrong here
 	var CORRECT_ARGUMENTS = classofRaw(function () { return arguments; }()) == 'Arguments';
 
@@ -374,11 +507,11 @@
 	  var O, tag, result;
 	  return it === undefined ? 'Undefined' : it === null ? 'Null'
 	    // @@toStringTag case
-	    : typeof (tag = tryGet(O = Object(it), TO_STRING_TAG$1)) == 'string' ? tag
+	    : typeof (tag = tryGet(O = Object$2(it), TO_STRING_TAG$1)) == 'string' ? tag
 	    // builtinTag case
 	    : CORRECT_ARGUMENTS ? classofRaw(O)
 	    // ES3 arguments fallback
-	    : (result = classofRaw(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : result;
+	    : (result = classofRaw(O)) == 'Object' && isCallable(O.callee) ? 'Arguments' : result;
 	};
 
 	// `Object.prototype.toString` method implementation
@@ -411,16 +544,17 @@
 		f: f$4
 	};
 
-	var split = ''.split;
+	var Object$1 = global_1.Object;
+	var split = functionUncurryThis(''.split);
 
 	// fallback for non-array-like ES3 and non-enumerable old V8 strings
 	var indexedObject = fails(function () {
 	  // throws an error in rhino, see https://github.com/mozilla/rhino/issues/346
 	  // eslint-disable-next-line no-prototype-builtins -- safe
-	  return !Object('z').propertyIsEnumerable(0);
+	  return !Object$1('z').propertyIsEnumerable(0);
 	}) ? function (it) {
-	  return classofRaw(it) == 'String' ? split.call(it, '') : Object(it);
-	} : Object;
+	  return classofRaw(it) == 'String' ? split(it, '') : Object$1(it);
+	} : Object$1;
 
 	// toObject with fallback for non-array-like ES3 strings
 
@@ -437,11 +571,11 @@
 	// https://tc39.es/ecma262/#sec-object.getownpropertydescriptor
 	var f$3 = descriptors ? $getOwnPropertyDescriptor : function getOwnPropertyDescriptor(O, P) {
 	  O = toIndexedObject(O);
-	  P = toPrimitive(P, true);
+	  P = toPropertyKey(P);
 	  if (ie8DomDefine) try {
 	    return $getOwnPropertyDescriptor(O, P);
 	  } catch (error) { /* empty */ }
-	  if (has$1(O, P)) return createPropertyDescriptor(!objectPropertyIsEnumerable.f.call(O, P), O[P]);
+	  if (hasOwnProperty_1(O, P)) return createPropertyDescriptor(!functionCall(objectPropertyIsEnumerable.f, O, P), O[P]);
 	};
 
 	var objectGetOwnPropertyDescriptor = {
@@ -451,10 +585,23 @@
 	var ceil = Math.ceil;
 	var floor = Math.floor;
 
-	// `ToInteger` abstract operation
-	// https://tc39.es/ecma262/#sec-tointeger
-	var toInteger = function (argument) {
-	  return isNaN(argument = +argument) ? 0 : (argument > 0 ? floor : ceil)(argument);
+	// `ToIntegerOrInfinity` abstract operation
+	// https://tc39.es/ecma262/#sec-tointegerorinfinity
+	var toIntegerOrInfinity = function (argument) {
+	  var number = +argument;
+	  // eslint-disable-next-line no-self-compare -- safe
+	  return number !== number || number === 0 ? 0 : (number > 0 ? floor : ceil)(number);
+	};
+
+	var max$1 = Math.max;
+	var min$2 = Math.min;
+
+	// Helper for a popular repeating case of the spec:
+	// Let integer be ? ToInteger(index).
+	// If integer < 0, let result be max((length + integer), 0); else let result be min(integer, length).
+	var toAbsoluteIndex = function (index, length) {
+	  var integer = toIntegerOrInfinity(index);
+	  return integer < 0 ? max$1(integer + length, 0) : min$2(integer, length);
 	};
 
 	var min$1 = Math.min;
@@ -462,25 +609,20 @@
 	// `ToLength` abstract operation
 	// https://tc39.es/ecma262/#sec-tolength
 	var toLength = function (argument) {
-	  return argument > 0 ? min$1(toInteger(argument), 0x1FFFFFFFFFFFFF) : 0; // 2 ** 53 - 1 == 9007199254740991
+	  return argument > 0 ? min$1(toIntegerOrInfinity(argument), 0x1FFFFFFFFFFFFF) : 0; // 2 ** 53 - 1 == 9007199254740991
 	};
 
-	var max = Math.max;
-	var min = Math.min;
-
-	// Helper for a popular repeating case of the spec:
-	// Let integer be ? ToInteger(index).
-	// If integer < 0, let result be max((length + integer), 0); else let result be min(integer, length).
-	var toAbsoluteIndex = function (index, length) {
-	  var integer = toInteger(index);
-	  return integer < 0 ? max(integer + length, 0) : min(integer, length);
+	// `LengthOfArrayLike` abstract operation
+	// https://tc39.es/ecma262/#sec-lengthofarraylike
+	var lengthOfArrayLike = function (obj) {
+	  return toLength(obj.length);
 	};
 
 	// `Array.prototype.{ indexOf, includes }` methods implementation
-	var createMethod$1 = function (IS_INCLUDES) {
+	var createMethod$2 = function (IS_INCLUDES) {
 	  return function ($this, el, fromIndex) {
 	    var O = toIndexedObject($this);
-	    var length = toLength(O.length);
+	    var length = lengthOfArrayLike(O);
 	    var index = toAbsoluteIndex(fromIndex, length);
 	    var value;
 	    // Array#includes uses SameValueZero equality algorithm
@@ -499,24 +641,26 @@
 	var arrayIncludes = {
 	  // `Array.prototype.includes` method
 	  // https://tc39.es/ecma262/#sec-array.prototype.includes
-	  includes: createMethod$1(true),
+	  includes: createMethod$2(true),
 	  // `Array.prototype.indexOf` method
 	  // https://tc39.es/ecma262/#sec-array.prototype.indexof
-	  indexOf: createMethod$1(false)
+	  indexOf: createMethod$2(false)
 	};
 
-	var indexOf = arrayIncludes.indexOf;
+	var indexOf$1 = arrayIncludes.indexOf;
 
+
+	var push$2 = functionUncurryThis([].push);
 
 	var objectKeysInternal = function (object, names) {
 	  var O = toIndexedObject(object);
 	  var i = 0;
 	  var result = [];
 	  var key;
-	  for (key in O) !has$1(hiddenKeys$1, key) && has$1(O, key) && result.push(key);
+	  for (key in O) !hasOwnProperty_1(hiddenKeys$1, key) && hasOwnProperty_1(O, key) && push$2(result, key);
 	  // Don't enum bug & hidden keys
-	  while (names.length > i) if (has$1(O, key = names[i++])) {
-	    ~indexOf(result, key) || result.push(key);
+	  while (names.length > i) if (hasOwnProperty_1(O, key = names[i++])) {
+	    ~indexOf$1(result, key) || push$2(result, key);
 	  }
 	  return result;
 	};
@@ -552,20 +696,24 @@
 		f: f$1
 	};
 
+	var concat = functionUncurryThis([].concat);
+
 	// all object keys, includes non-enumerable and symbols
 	var ownKeys = getBuiltIn('Reflect', 'ownKeys') || function ownKeys(it) {
 	  var keys = objectGetOwnPropertyNames.f(anObject(it));
 	  var getOwnPropertySymbols = objectGetOwnPropertySymbols.f;
-	  return getOwnPropertySymbols ? keys.concat(getOwnPropertySymbols(it)) : keys;
+	  return getOwnPropertySymbols ? concat(keys, getOwnPropertySymbols(it)) : keys;
 	};
 
-	var copyConstructorProperties = function (target, source) {
+	var copyConstructorProperties = function (target, source, exceptions) {
 	  var keys = ownKeys(source);
 	  var defineProperty = objectDefineProperty.f;
 	  var getOwnPropertyDescriptor = objectGetOwnPropertyDescriptor.f;
 	  for (var i = 0; i < keys.length; i++) {
 	    var key = keys[i];
-	    if (!has$1(target, key)) defineProperty(target, key, getOwnPropertyDescriptor(source, key));
+	    if (!hasOwnProperty_1(target, key) && !(exceptions && hasOwnProperty_1(exceptions, key))) {
+	      defineProperty(target, key, getOwnPropertyDescriptor(source, key));
+	    }
 	  }
 	};
 
@@ -575,7 +723,7 @@
 	  var value = data[normalize(feature)];
 	  return value == POLYFILL ? true
 	    : value == NATIVE ? false
-	    : typeof detection == 'function' ? fails(detection)
+	    : isCallable(detection) ? fails(detection)
 	    : !!detection;
 	};
 
@@ -609,6 +757,7 @@
 	  options.sham        - add a flag to not completely full polyfills
 	  options.enumerable  - export as enumerable property
 	  options.noTargetGet - prevent calling a getter on target
+	  options.name        - the .name of the function if it does not match the key
 	*/
 	var _export = function (options, source) {
 	  var TARGET = options.target;
@@ -631,7 +780,7 @@
 	    FORCED = isForced_1(GLOBAL ? key : TARGET + (STATIC ? '.' : '#') + key, options.forced);
 	    // contained in target
 	    if (!FORCED && targetProperty !== undefined) {
-	      if (typeof sourceProperty === typeof targetProperty) continue;
+	      if (typeof sourceProperty == typeof targetProperty) continue;
 	      copyConstructorProperties(sourceProperty, targetProperty);
 	    }
 	    // add a flag to not completely full polyfills
@@ -650,13 +799,16 @@
 	  return target;
 	};
 
-	var aPossiblePrototype = function (it) {
-	  if (!isObject(it) && it !== null) {
-	    throw TypeError("Can't set " + String(it) + ' as a prototype');
-	  } return it;
+	var String$3 = global_1.String;
+	var TypeError$7 = global_1.TypeError;
+
+	var aPossiblePrototype = function (argument) {
+	  if (typeof argument == 'object' || isCallable(argument)) return argument;
+	  throw TypeError$7("Can't set " + String$3(argument) + ' as a prototype');
 	};
 
 	/* eslint-disable no-proto -- safe */
+
 
 
 
@@ -670,14 +822,14 @@
 	  var setter;
 	  try {
 	    // eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-	    setter = Object.getOwnPropertyDescriptor(Object.prototype, '__proto__').set;
-	    setter.call(test, []);
+	    setter = functionUncurryThis(Object.getOwnPropertyDescriptor(Object.prototype, '__proto__').set);
+	    setter(test, []);
 	    CORRECT_SETTER = test instanceof Array;
 	  } catch (error) { /* empty */ }
 	  return function setPrototypeOf(O, proto) {
 	    anObject(O);
 	    aPossiblePrototype(proto);
-	    if (CORRECT_SETTER) setter.call(O, proto);
+	    if (CORRECT_SETTER) setter(O, proto);
 	    else O.__proto__ = proto;
 	    return O;
 	  };
@@ -689,36 +841,42 @@
 
 	var TO_STRING_TAG = wellKnownSymbol('toStringTag');
 
-	var setToStringTag = function (it, TAG, STATIC) {
-	  if (it && !has$1(it = STATIC ? it : it.prototype, TO_STRING_TAG)) {
-	    defineProperty(it, TO_STRING_TAG, { configurable: true, value: TAG });
+	var setToStringTag = function (target, TAG, STATIC) {
+	  if (target && !STATIC) target = target.prototype;
+	  if (target && !hasOwnProperty_1(target, TO_STRING_TAG)) {
+	    defineProperty(target, TO_STRING_TAG, { configurable: true, value: TAG });
 	  }
 	};
 
-	var SPECIES$3 = wellKnownSymbol('species');
+	var SPECIES$4 = wellKnownSymbol('species');
 
 	var setSpecies = function (CONSTRUCTOR_NAME) {
 	  var Constructor = getBuiltIn(CONSTRUCTOR_NAME);
 	  var defineProperty = objectDefineProperty.f;
 
-	  if (descriptors && Constructor && !Constructor[SPECIES$3]) {
-	    defineProperty(Constructor, SPECIES$3, {
+	  if (descriptors && Constructor && !Constructor[SPECIES$4]) {
+	    defineProperty(Constructor, SPECIES$4, {
 	      configurable: true,
 	      get: function () { return this; }
 	    });
 	  }
 	};
 
-	var aFunction = function (it) {
-	  if (typeof it != 'function') {
-	    throw TypeError(String(it) + ' is not a function');
-	  } return it;
+	var TypeError$6 = global_1.TypeError;
+
+	var anInstance = function (it, Prototype) {
+	  if (objectIsPrototypeOf(Prototype, it)) return it;
+	  throw TypeError$6('Incorrect invocation');
 	};
 
-	var anInstance = function (it, Constructor, name) {
-	  if (!(it instanceof Constructor)) {
-	    throw TypeError('Incorrect ' + (name ? name + ' ' : '') + 'invocation');
-	  } return it;
+	var bind$2 = functionUncurryThis(functionUncurryThis.bind);
+
+	// optional / simple context binding
+	var functionBindContext = function (fn, that) {
+	  aCallable(fn);
+	  return that === undefined ? fn : bind$2 ? bind$2(fn, that) : function (/* ...args */) {
+	    return fn.apply(that, arguments);
+	  };
 	};
 
 	var iterators = {};
@@ -731,59 +889,61 @@
 	  return it !== undefined && (iterators.Array === it || ArrayPrototype[ITERATOR$2] === it);
 	};
 
-	// optional / simple context binding
-	var functionBindContext = function (fn, that, length) {
-	  aFunction(fn);
-	  if (that === undefined) return fn;
-	  switch (length) {
-	    case 0: return function () {
-	      return fn.call(that);
-	    };
-	    case 1: return function (a) {
-	      return fn.call(that, a);
-	    };
-	    case 2: return function (a, b) {
-	      return fn.call(that, a, b);
-	    };
-	    case 3: return function (a, b, c) {
-	      return fn.call(that, a, b, c);
-	    };
-	  }
-	  return function (/* ...args */) {
-	    return fn.apply(that, arguments);
-	  };
-	};
-
 	var ITERATOR$1 = wellKnownSymbol('iterator');
 
 	var getIteratorMethod = function (it) {
-	  if (it != undefined) return it[ITERATOR$1]
-	    || it['@@iterator']
+	  if (it != undefined) return getMethod(it, ITERATOR$1)
+	    || getMethod(it, '@@iterator')
 	    || iterators[classof(it)];
 	};
 
-	var iteratorClose = function (iterator) {
-	  var returnMethod = iterator['return'];
-	  if (returnMethod !== undefined) {
-	    return anObject(returnMethod.call(iterator)).value;
-	  }
+	var TypeError$5 = global_1.TypeError;
+
+	var getIterator = function (argument, usingIterator) {
+	  var iteratorMethod = arguments.length < 2 ? getIteratorMethod(argument) : usingIterator;
+	  if (aCallable(iteratorMethod)) return anObject(functionCall(iteratorMethod, argument));
+	  throw TypeError$5(tryToString(argument) + ' is not iterable');
 	};
+
+	var iteratorClose = function (iterator, kind, value) {
+	  var innerResult, innerError;
+	  anObject(iterator);
+	  try {
+	    innerResult = getMethod(iterator, 'return');
+	    if (!innerResult) {
+	      if (kind === 'throw') throw value;
+	      return value;
+	    }
+	    innerResult = functionCall(innerResult, iterator);
+	  } catch (error) {
+	    innerError = true;
+	    innerResult = error;
+	  }
+	  if (kind === 'throw') throw value;
+	  if (innerError) throw innerResult;
+	  anObject(innerResult);
+	  return value;
+	};
+
+	var TypeError$4 = global_1.TypeError;
 
 	var Result = function (stopped, result) {
 	  this.stopped = stopped;
 	  this.result = result;
 	};
 
+	var ResultPrototype = Result.prototype;
+
 	var iterate = function (iterable, unboundFunction, options) {
 	  var that = options && options.that;
 	  var AS_ENTRIES = !!(options && options.AS_ENTRIES);
 	  var IS_ITERATOR = !!(options && options.IS_ITERATOR);
 	  var INTERRUPTED = !!(options && options.INTERRUPTED);
-	  var fn = functionBindContext(unboundFunction, that, 1 + AS_ENTRIES + INTERRUPTED);
+	  var fn = functionBindContext(unboundFunction, that);
 	  var iterator, iterFn, index, length, result, next, step;
 
 	  var stop = function (condition) {
-	    if (iterator) iteratorClose(iterator);
+	    if (iterator) iteratorClose(iterator, 'normal', condition);
 	    return new Result(true, condition);
 	  };
 
@@ -798,26 +958,25 @@
 	    iterator = iterable;
 	  } else {
 	    iterFn = getIteratorMethod(iterable);
-	    if (typeof iterFn != 'function') throw TypeError('Target is not iterable');
+	    if (!iterFn) throw TypeError$4(tryToString(iterable) + ' is not iterable');
 	    // optimisation for array iterators
 	    if (isArrayIteratorMethod(iterFn)) {
-	      for (index = 0, length = toLength(iterable.length); length > index; index++) {
+	      for (index = 0, length = lengthOfArrayLike(iterable); length > index; index++) {
 	        result = callFn(iterable[index]);
-	        if (result && result instanceof Result) return result;
+	        if (result && objectIsPrototypeOf(ResultPrototype, result)) return result;
 	      } return new Result(false);
 	    }
-	    iterator = iterFn.call(iterable);
+	    iterator = getIterator(iterable, iterFn);
 	  }
 
 	  next = iterator.next;
-	  while (!(step = next.call(iterator)).done) {
+	  while (!(step = functionCall(next, iterator)).done) {
 	    try {
 	      result = callFn(step.value);
 	    } catch (error) {
-	      iteratorClose(iterator);
-	      throw error;
+	      iteratorClose(iterator, 'throw', error);
 	    }
-	    if (typeof result == 'object' && result && result instanceof Result) return result;
+	    if (typeof result == 'object' && result && objectIsPrototypeOf(ResultPrototype, result)) return result;
 	  } return new Result(false);
 	};
 
@@ -858,36 +1017,107 @@
 	  return ITERATION_SUPPORT;
 	};
 
-	var SPECIES$2 = wellKnownSymbol('species');
+	var noop = function () { /* empty */ };
+	var empty = [];
+	var construct = getBuiltIn('Reflect', 'construct');
+	var constructorRegExp = /^\s*(?:class|function)\b/;
+	var exec$1 = functionUncurryThis(constructorRegExp.exec);
+	var INCORRECT_TO_STRING = !constructorRegExp.exec(noop);
+
+	var isConstructorModern = function isConstructor(argument) {
+	  if (!isCallable(argument)) return false;
+	  try {
+	    construct(noop, empty, argument);
+	    return true;
+	  } catch (error) {
+	    return false;
+	  }
+	};
+
+	var isConstructorLegacy = function isConstructor(argument) {
+	  if (!isCallable(argument)) return false;
+	  switch (classof(argument)) {
+	    case 'AsyncFunction':
+	    case 'GeneratorFunction':
+	    case 'AsyncGeneratorFunction': return false;
+	  }
+	  try {
+	    // we can't check .prototype since constructors produced by .bind haven't it
+	    // `Function#toString` throws on some built-it function in some legacy engines
+	    // (for example, `DOMQuad` and similar in FF41-)
+	    return INCORRECT_TO_STRING || !!exec$1(constructorRegExp, inspectSource(argument));
+	  } catch (error) {
+	    return true;
+	  }
+	};
+
+	isConstructorLegacy.sham = true;
+
+	// `IsConstructor` abstract operation
+	// https://tc39.es/ecma262/#sec-isconstructor
+	var isConstructor = !construct || fails(function () {
+	  var called;
+	  return isConstructorModern(isConstructorModern.call)
+	    || !isConstructorModern(Object)
+	    || !isConstructorModern(function () { called = true; })
+	    || called;
+	}) ? isConstructorLegacy : isConstructorModern;
+
+	var TypeError$3 = global_1.TypeError;
+
+	// `Assert: IsConstructor(argument) is true`
+	var aConstructor = function (argument) {
+	  if (isConstructor(argument)) return argument;
+	  throw TypeError$3(tryToString(argument) + ' is not a constructor');
+	};
+
+	var SPECIES$3 = wellKnownSymbol('species');
 
 	// `SpeciesConstructor` abstract operation
 	// https://tc39.es/ecma262/#sec-speciesconstructor
 	var speciesConstructor = function (O, defaultConstructor) {
 	  var C = anObject(O).constructor;
 	  var S;
-	  return C === undefined || (S = anObject(C)[SPECIES$2]) == undefined ? defaultConstructor : aFunction(S);
+	  return C === undefined || (S = anObject(C)[SPECIES$3]) == undefined ? defaultConstructor : aConstructor(S);
 	};
+
+	var FunctionPrototype = Function.prototype;
+	var apply = FunctionPrototype.apply;
+	var bind$1 = FunctionPrototype.bind;
+	var call = FunctionPrototype.call;
+
+	// eslint-disable-next-line es/no-reflect -- safe
+	var functionApply = typeof Reflect == 'object' && Reflect.apply || (bind$1 ? call.bind(apply) : function () {
+	  return call.apply(apply, arguments);
+	});
 
 	var html = getBuiltIn('document', 'documentElement');
 
-	var engineIsIos = /(?:iphone|ipod|ipad).*applewebkit/i.test(engineUserAgent);
+	var arraySlice = functionUncurryThis([].slice);
+
+	var engineIsIos = /(?:ipad|iphone|ipod).*applewebkit/i.test(engineUserAgent);
 
 	var engineIsNode = classofRaw(global_1.process) == 'process';
 
-	var location = global_1.location;
 	var set = global_1.setImmediate;
 	var clear = global_1.clearImmediate;
 	var process$2 = global_1.process;
-	var MessageChannel = global_1.MessageChannel;
 	var Dispatch = global_1.Dispatch;
+	var Function$1 = global_1.Function;
+	var MessageChannel = global_1.MessageChannel;
+	var String$2 = global_1.String;
 	var counter = 0;
 	var queue = {};
 	var ONREADYSTATECHANGE = 'onreadystatechange';
-	var defer, channel, port;
+	var location, defer, channel, port;
+
+	try {
+	  // Deno throws a ReferenceError on `location` access without `--location` flag
+	  location = global_1.location;
+	} catch (error) { /* empty */ }
 
 	var run = function (id) {
-	  // eslint-disable-next-line no-prototype-builtins -- safe
-	  if (queue.hasOwnProperty(id)) {
+	  if (hasOwnProperty_1(queue, id)) {
 	    var fn = queue[id];
 	    delete queue[id];
 	    fn();
@@ -906,18 +1136,15 @@
 
 	var post = function (id) {
 	  // old engines have not location.origin
-	  global_1.postMessage(id + '', location.protocol + '//' + location.host);
+	  global_1.postMessage(String$2(id), location.protocol + '//' + location.host);
 	};
 
 	// Node.js 0.9+ & IE10+ has setImmediate, otherwise:
 	if (!set || !clear) {
 	  set = function setImmediate(fn) {
-	    var args = [];
-	    var i = 1;
-	    while (arguments.length > i) args.push(arguments[i++]);
+	    var args = arraySlice(arguments, 1);
 	    queue[++counter] = function () {
-	      // eslint-disable-next-line no-new-func -- spec requirement
-	      (typeof fn == 'function' ? fn : Function(fn)).apply(undefined, args);
+	      functionApply(isCallable(fn) ? fn : Function$1(fn), undefined, args);
 	    };
 	    defer(counter);
 	    return counter;
@@ -941,12 +1168,12 @@
 	    channel = new MessageChannel();
 	    port = channel.port2;
 	    channel.port1.onmessage = listener;
-	    defer = functionBindContext(port.postMessage, port, 1);
+	    defer = functionBindContext(port.postMessage, port);
 	  // Browsers with postMessage, skip WebWorkers
 	  // IE8 has postMessage, but it's sync & typeof its postMessage is 'object'
 	  } else if (
 	    global_1.addEventListener &&
-	    typeof postMessage == 'function' &&
+	    isCallable(global_1.postMessage) &&
 	    !global_1.importScripts &&
 	    location && location.protocol !== 'file:' &&
 	    !fails(post)
@@ -974,6 +1201,8 @@
 	  clear: clear
 	};
 
+	var engineIsIosPebble = /ipad|iphone|ipod/i.test(engineUserAgent) && global_1.Pebble !== undefined;
+
 	var engineIsWebosWebkit = /web0s(?!.*chrome)/i.test(engineUserAgent);
 
 	var getOwnPropertyDescriptor = objectGetOwnPropertyDescriptor.f;
@@ -982,8 +1211,9 @@
 
 
 
+
 	var MutationObserver = global_1.MutationObserver || global_1.WebKitMutationObserver;
-	var document$1 = global_1.document;
+	var document$2 = global_1.document;
 	var process$1 = global_1.process;
 	var Promise$1 = global_1.Promise;
 	// Node.js 11 shows ExperimentalWarning on getting `queueMicrotask`
@@ -1013,22 +1243,22 @@
 
 	  // browsers with MutationObserver, except iOS - https://github.com/zloirock/core-js/issues/339
 	  // also except WebOS Webkit https://github.com/zloirock/core-js/issues/898
-	  if (!engineIsIos && !engineIsNode && !engineIsWebosWebkit && MutationObserver && document$1) {
+	  if (!engineIsIos && !engineIsNode && !engineIsWebosWebkit && MutationObserver && document$2) {
 	    toggle = true;
-	    node = document$1.createTextNode('');
+	    node = document$2.createTextNode('');
 	    new MutationObserver(flush).observe(node, { characterData: true });
 	    notify$1 = function () {
 	      node.data = toggle = !toggle;
 	    };
 	  // environments with maybe non-completely correct, but existent Promise
-	  } else if (Promise$1 && Promise$1.resolve) {
+	  } else if (!engineIsIosPebble && Promise$1 && Promise$1.resolve) {
 	    // Promise.resolve without an argument throws an error in LG WebOS 2
 	    promise = Promise$1.resolve(undefined);
 	    // workaround of WebKit ~ iOS Safari 10.1 bug
 	    promise.constructor = Promise$1;
-	    then = promise.then;
+	    then = functionBindContext(promise.then, promise);
 	    notify$1 = function () {
-	      then.call(promise, flush);
+	      then(flush);
 	    };
 	  // Node.js without promises
 	  } else if (engineIsNode) {
@@ -1042,9 +1272,10 @@
 	  // - onreadystatechange
 	  // - setTimeout
 	  } else {
+	    // strange IE + webpack dev server bug - use .bind(global)
+	    macrotask = functionBindContext(macrotask, global_1);
 	    notify$1 = function () {
-	      // strange IE + webpack dev server bug - use .call(global)
-	      macrotask.call(global_1, flush);
+	      macrotask(flush);
 	    };
 	  }
 	}
@@ -1065,8 +1296,8 @@
 	    resolve = $$resolve;
 	    reject = $$reject;
 	  });
-	  this.resolve = aFunction(resolve);
-	  this.reject = aFunction(reject);
+	  this.resolve = aCallable(resolve);
+	  this.reject = aCallable(reject);
 	};
 
 	// `NewPromiseCapability` abstract operation
@@ -1091,7 +1322,7 @@
 	var hostReportErrors = function (a, b) {
 	  var console = global_1.console;
 	  if (console && console.error) {
-	    arguments.length === 1 ? console.error(a) : console.error(a, b);
+	    arguments.length == 1 ? console.error(a) : console.error(a, b);
 	  }
 	};
 
@@ -1118,21 +1349,23 @@
 
 
 
-	var SPECIES$1 = wellKnownSymbol('species');
+	var SPECIES$2 = wellKnownSymbol('species');
 	var PROMISE = 'Promise';
-	var getInternalState = internalState.get;
+
+	var getInternalState$1 = internalState.getterFor(PROMISE);
 	var setInternalState = internalState.set;
 	var getInternalPromiseState = internalState.getterFor(PROMISE);
 	var NativePromisePrototype = nativePromiseConstructor && nativePromiseConstructor.prototype;
 	var PromiseConstructor = nativePromiseConstructor;
-	var PromiseConstructorPrototype = NativePromisePrototype;
-	var TypeError$1 = global_1.TypeError;
-	var document = global_1.document;
+	var PromisePrototype = NativePromisePrototype;
+	var TypeError$2 = global_1.TypeError;
+	var document$1 = global_1.document;
 	var process = global_1.process;
 	var newPromiseCapability = newPromiseCapability$1.f;
 	var newGenericPromiseCapability = newPromiseCapability;
-	var DISPATCH_EVENT = !!(document && document.createEvent && global_1.dispatchEvent);
-	var NATIVE_REJECTION_EVENT = typeof PromiseRejectionEvent == 'function';
+
+	var DISPATCH_EVENT = !!(document$1 && document$1.createEvent && global_1.dispatchEvent);
+	var NATIVE_REJECTION_EVENT = isCallable(global_1.PromiseRejectionEvent);
 	var UNHANDLED_REJECTION = 'unhandledrejection';
 	var REJECTION_HANDLED = 'rejectionhandled';
 	var PENDING = 0;
@@ -1141,10 +1374,12 @@
 	var HANDLED = 1;
 	var UNHANDLED = 2;
 	var SUBCLASSING = false;
+
 	var Internal, OwnPromiseCapability, PromiseWrapper, nativeThen;
 
 	var FORCED = isForced_1(PROMISE, function () {
-	  var GLOBAL_CORE_JS_PROMISE = inspectSource(PromiseConstructor) !== String(PromiseConstructor);
+	  var PROMISE_CONSTRUCTOR_SOURCE = inspectSource(PromiseConstructor);
+	  var GLOBAL_CORE_JS_PROMISE = PROMISE_CONSTRUCTOR_SOURCE !== String(PromiseConstructor);
 	  // V8 6.6 (Node 10 and Chrome 66) have a bug with resolving custom thenables
 	  // https://bugs.chromium.org/p/chromium/issues/detail?id=830565
 	  // We can't detect it synchronously, so just check versions
@@ -1152,14 +1387,14 @@
 	  // We can't use @@species feature detection in V8 since it causes
 	  // deoptimization and performance degradation
 	  // https://github.com/zloirock/core-js/issues/679
-	  if (engineV8Version >= 51 && /native code/.test(PromiseConstructor)) return false;
+	  if (engineV8Version >= 51 && /native code/.test(PROMISE_CONSTRUCTOR_SOURCE)) return false;
 	  // Detect correctness of subclassing with @@species support
 	  var promise = new PromiseConstructor(function (resolve) { resolve(1); });
 	  var FakePromise = function (exec) {
 	    exec(function () { /* empty */ }, function () { /* empty */ });
 	  };
 	  var constructor = promise.constructor = {};
-	  constructor[SPECIES$1] = FakePromise;
+	  constructor[SPECIES$2] = FakePromise;
 	  SUBCLASSING = promise.then(function () { /* empty */ }) instanceof FakePromise;
 	  if (!SUBCLASSING) return true;
 	  // Unhandled rejections tracking support, NodeJS Promise without it fails @@species test
@@ -1173,7 +1408,7 @@
 	// helpers
 	var isThenable = function (it) {
 	  var then;
-	  return isObject(it) && typeof (then = it.then) == 'function' ? then : false;
+	  return isObject(it) && isCallable(then = it.then) ? then : false;
 	};
 
 	var notify = function (state, isReject) {
@@ -1208,9 +1443,9 @@
 	            }
 	          }
 	          if (result === reaction.promise) {
-	            reject(TypeError$1('Promise-chain cycle'));
+	            reject(TypeError$2('Promise-chain cycle'));
 	          } else if (then = isThenable(result)) {
-	            then.call(result, resolve, reject);
+	            functionCall(then, result, resolve, reject);
 	          } else resolve(result);
 	        } else reject(value);
 	      } catch (error) {
@@ -1227,7 +1462,7 @@
 	var dispatchEvent = function (name, promise, reason) {
 	  var event, handler;
 	  if (DISPATCH_EVENT) {
-	    event = document.createEvent('Event');
+	    event = document$1.createEvent('Event');
 	    event.promise = promise;
 	    event.reason = reason;
 	    event.initEvent(name, false, true);
@@ -1238,7 +1473,7 @@
 	};
 
 	var onUnhandled = function (state) {
-	  task.call(global_1, function () {
+	  functionCall(task, global_1, function () {
 	    var promise = state.facade;
 	    var value = state.value;
 	    var IS_UNHANDLED = isUnhandled(state);
@@ -1261,7 +1496,7 @@
 	};
 
 	var onHandleUnhandled = function (state) {
-	  task.call(global_1, function () {
+	  functionCall(task, global_1, function () {
 	    var promise = state.facade;
 	    if (engineIsNode) {
 	      process.emit('rejectionHandled', promise);
@@ -1289,13 +1524,13 @@
 	  state.done = true;
 	  if (unwrap) state = unwrap;
 	  try {
-	    if (state.facade === value) throw TypeError$1("Promise can't be resolved itself");
+	    if (state.facade === value) throw TypeError$2("Promise can't be resolved itself");
 	    var then = isThenable(value);
 	    if (then) {
 	      microtask(function () {
 	        var wrapper = { done: false };
 	        try {
-	          then.call(value,
+	          functionCall(then, value,
 	            bind(internalResolve, wrapper, state),
 	            bind(internalReject, wrapper, state)
 	          );
@@ -1317,17 +1552,17 @@
 	if (FORCED) {
 	  // 25.4.3.1 Promise(executor)
 	  PromiseConstructor = function Promise(executor) {
-	    anInstance(this, PromiseConstructor, PROMISE);
-	    aFunction(executor);
-	    Internal.call(this);
-	    var state = getInternalState(this);
+	    anInstance(this, PromisePrototype);
+	    aCallable(executor);
+	    functionCall(Internal, this);
+	    var state = getInternalState$1(this);
 	    try {
 	      executor(bind(internalResolve, state), bind(internalReject, state));
 	    } catch (error) {
 	      internalReject(state, error);
 	    }
 	  };
-	  PromiseConstructorPrototype = PromiseConstructor.prototype;
+	  PromisePrototype = PromiseConstructor.prototype;
 	  // eslint-disable-next-line no-unused-vars -- required for `.length`
 	  Internal = function Promise(executor) {
 	    setInternalState(this, {
@@ -1341,17 +1576,18 @@
 	      value: undefined
 	    });
 	  };
-	  Internal.prototype = redefineAll(PromiseConstructorPrototype, {
+	  Internal.prototype = redefineAll(PromisePrototype, {
 	    // `Promise.prototype.then` method
 	    // https://tc39.es/ecma262/#sec-promise.prototype.then
 	    then: function then(onFulfilled, onRejected) {
 	      var state = getInternalPromiseState(this);
+	      var reactions = state.reactions;
 	      var reaction = newPromiseCapability(speciesConstructor(this, PromiseConstructor));
-	      reaction.ok = typeof onFulfilled == 'function' ? onFulfilled : true;
-	      reaction.fail = typeof onRejected == 'function' && onRejected;
+	      reaction.ok = isCallable(onFulfilled) ? onFulfilled : true;
+	      reaction.fail = isCallable(onRejected) && onRejected;
 	      reaction.domain = engineIsNode ? process.domain : undefined;
 	      state.parent = true;
-	      state.reactions.push(reaction);
+	      reactions[reactions.length] = reaction;
 	      if (state.state != PENDING) notify(state, false);
 	      return reaction.promise;
 	    },
@@ -1363,7 +1599,7 @@
 	  });
 	  OwnPromiseCapability = function () {
 	    var promise = new Internal();
-	    var state = getInternalState(promise);
+	    var state = getInternalState$1(promise);
 	    this.promise = promise;
 	    this.resolve = bind(internalResolve, state);
 	    this.reject = bind(internalReject, state);
@@ -1374,7 +1610,7 @@
 	      : newGenericPromiseCapability(C);
 	  };
 
-	  if (typeof nativePromiseConstructor == 'function' && NativePromisePrototype !== Object.prototype) {
+	  if (isCallable(nativePromiseConstructor) && NativePromisePrototype !== Object.prototype) {
 	    nativeThen = NativePromisePrototype.then;
 
 	    if (!SUBCLASSING) {
@@ -1382,13 +1618,13 @@
 	      redefine(NativePromisePrototype, 'then', function then(onFulfilled, onRejected) {
 	        var that = this;
 	        return new PromiseConstructor(function (resolve, reject) {
-	          nativeThen.call(that, resolve, reject);
+	          functionCall(nativeThen, that, resolve, reject);
 	        }).then(onFulfilled, onRejected);
 	      // https://github.com/zloirock/core-js/issues/640
 	      }, { unsafe: true });
 
 	      // makes sure that native promise-based APIs `Promise#catch` properly works with patched `Promise#then`
-	      redefine(NativePromisePrototype, 'catch', PromiseConstructorPrototype['catch'], { unsafe: true });
+	      redefine(NativePromisePrototype, 'catch', PromisePrototype['catch'], { unsafe: true });
 	    }
 
 	    // make `.constructor === Promise` work for native promise-based APIs
@@ -1398,7 +1634,7 @@
 
 	    // make `instanceof Promise` work for native promise-based APIs
 	    if (objectSetPrototypeOf) {
-	      objectSetPrototypeOf(NativePromisePrototype, PromiseConstructorPrototype);
+	      objectSetPrototypeOf(NativePromisePrototype, PromisePrototype);
 	    }
 	  }
 	}
@@ -1418,7 +1654,7 @@
 	  // https://tc39.es/ecma262/#sec-promise.reject
 	  reject: function reject(r) {
 	    var capability = newPromiseCapability(this);
-	    capability.reject.call(undefined, r);
+	    functionCall(capability.reject, undefined, r);
 	    return capability.promise;
 	  }
 	});
@@ -1440,16 +1676,15 @@
 	    var resolve = capability.resolve;
 	    var reject = capability.reject;
 	    var result = perform(function () {
-	      var $promiseResolve = aFunction(C.resolve);
+	      var $promiseResolve = aCallable(C.resolve);
 	      var values = [];
 	      var counter = 0;
 	      var remaining = 1;
 	      iterate(iterable, function (promise) {
 	        var index = counter++;
 	        var alreadyCalled = false;
-	        values.push(undefined);
 	        remaining++;
-	        $promiseResolve.call(C, promise).then(function (value) {
+	        functionCall($promiseResolve, C, promise).then(function (value) {
 	          if (alreadyCalled) return;
 	          alreadyCalled = true;
 	          values[index] = value;
@@ -1468,9 +1703,9 @@
 	    var capability = newPromiseCapability(C);
 	    var reject = capability.reject;
 	    var result = perform(function () {
-	      var $promiseResolve = aFunction(C.resolve);
+	      var $promiseResolve = aCallable(C.resolve);
 	      iterate(iterable, function (promise) {
-	        $promiseResolve.call(C, promise).then(capability.resolve, reject);
+	        functionCall($promiseResolve, C, promise).then(capability.resolve, reject);
 	      });
 	    });
 	    if (result.error) reject(result.value);
@@ -1514,49 +1749,64 @@
 	  TouchList: 0
 	};
 
+	// in old WebKit versions, `element.classList` is not an instance of global `DOMTokenList`
+
+
+	var classList = documentCreateElement('span').classList;
+	var DOMTokenListPrototype = classList && classList.constructor && classList.constructor.prototype;
+
+	var domTokenListPrototype = DOMTokenListPrototype === Object.prototype ? undefined : DOMTokenListPrototype;
+
 	// `IsArray` abstract operation
 	// https://tc39.es/ecma262/#sec-isarray
 	// eslint-disable-next-line es/no-array-isarray -- safe
-	var isArray = Array.isArray || function isArray(arg) {
-	  return classofRaw(arg) == 'Array';
+	var isArray = Array.isArray || function isArray(argument) {
+	  return classofRaw(argument) == 'Array';
 	};
 
-	var SPECIES = wellKnownSymbol('species');
+	var SPECIES$1 = wellKnownSymbol('species');
+	var Array$2 = global_1.Array;
 
-	// `ArraySpeciesCreate` abstract operation
+	// a part of `ArraySpeciesCreate` abstract operation
 	// https://tc39.es/ecma262/#sec-arrayspeciescreate
-	var arraySpeciesCreate = function (originalArray, length) {
+	var arraySpeciesConstructor = function (originalArray) {
 	  var C;
 	  if (isArray(originalArray)) {
 	    C = originalArray.constructor;
 	    // cross-realm fallback
-	    if (typeof C == 'function' && (C === Array || isArray(C.prototype))) C = undefined;
+	    if (isConstructor(C) && (C === Array$2 || isArray(C.prototype))) C = undefined;
 	    else if (isObject(C)) {
-	      C = C[SPECIES];
+	      C = C[SPECIES$1];
 	      if (C === null) C = undefined;
 	    }
-	  } return new (C === undefined ? Array : C)(length === 0 ? 0 : length);
+	  } return C === undefined ? Array$2 : C;
 	};
 
-	var push = [].push;
+	// `ArraySpeciesCreate` abstract operation
+	// https://tc39.es/ecma262/#sec-arrayspeciescreate
+	var arraySpeciesCreate = function (originalArray, length) {
+	  return new (arraySpeciesConstructor(originalArray))(length === 0 ? 0 : length);
+	};
 
-	// `Array.prototype.{ forEach, map, filter, some, every, find, findIndex, filterOut }` methods implementation
-	var createMethod = function (TYPE) {
+	var push$1 = functionUncurryThis([].push);
+
+	// `Array.prototype.{ forEach, map, filter, some, every, find, findIndex, filterReject }` methods implementation
+	var createMethod$1 = function (TYPE) {
 	  var IS_MAP = TYPE == 1;
 	  var IS_FILTER = TYPE == 2;
 	  var IS_SOME = TYPE == 3;
 	  var IS_EVERY = TYPE == 4;
 	  var IS_FIND_INDEX = TYPE == 6;
-	  var IS_FILTER_OUT = TYPE == 7;
+	  var IS_FILTER_REJECT = TYPE == 7;
 	  var NO_HOLES = TYPE == 5 || IS_FIND_INDEX;
 	  return function ($this, callbackfn, that, specificCreate) {
 	    var O = toObject($this);
 	    var self = indexedObject(O);
-	    var boundFunction = functionBindContext(callbackfn, that, 3);
-	    var length = toLength(self.length);
+	    var boundFunction = functionBindContext(callbackfn, that);
+	    var length = lengthOfArrayLike(self);
 	    var index = 0;
 	    var create = specificCreate || arraySpeciesCreate;
-	    var target = IS_MAP ? create($this, length) : IS_FILTER || IS_FILTER_OUT ? create($this, 0) : undefined;
+	    var target = IS_MAP ? create($this, length) : IS_FILTER || IS_FILTER_REJECT ? create($this, 0) : undefined;
 	    var value, result;
 	    for (;length > index; index++) if (NO_HOLES || index in self) {
 	      value = self[index];
@@ -1567,10 +1817,10 @@
 	          case 3: return true;              // some
 	          case 5: return value;             // find
 	          case 6: return index;             // findIndex
-	          case 2: push.call(target, value); // filter
+	          case 2: push$1(target, value);      // filter
 	        } else switch (TYPE) {
 	          case 4: return false;             // every
-	          case 7: push.call(target, value); // filterOut
+	          case 7: push$1(target, value);      // filterReject
 	        }
 	      }
 	    }
@@ -1581,28 +1831,28 @@
 	var arrayIteration = {
 	  // `Array.prototype.forEach` method
 	  // https://tc39.es/ecma262/#sec-array.prototype.foreach
-	  forEach: createMethod(0),
+	  forEach: createMethod$1(0),
 	  // `Array.prototype.map` method
 	  // https://tc39.es/ecma262/#sec-array.prototype.map
-	  map: createMethod(1),
+	  map: createMethod$1(1),
 	  // `Array.prototype.filter` method
 	  // https://tc39.es/ecma262/#sec-array.prototype.filter
-	  filter: createMethod(2),
+	  filter: createMethod$1(2),
 	  // `Array.prototype.some` method
 	  // https://tc39.es/ecma262/#sec-array.prototype.some
-	  some: createMethod(3),
+	  some: createMethod$1(3),
 	  // `Array.prototype.every` method
 	  // https://tc39.es/ecma262/#sec-array.prototype.every
-	  every: createMethod(4),
+	  every: createMethod$1(4),
 	  // `Array.prototype.find` method
 	  // https://tc39.es/ecma262/#sec-array.prototype.find
-	  find: createMethod(5),
+	  find: createMethod$1(5),
 	  // `Array.prototype.findIndex` method
 	  // https://tc39.es/ecma262/#sec-array.prototype.findIndex
-	  findIndex: createMethod(6),
-	  // `Array.prototype.filterOut` method
+	  findIndex: createMethod$1(6),
+	  // `Array.prototype.filterReject` method
 	  // https://github.com/tc39/proposal-array-filtering
-	  filterOut: createMethod(7)
+	  filterReject: createMethod$1(7)
 	};
 
 	var arrayMethodIsStrict = function (METHOD_NAME, argument) {
@@ -1625,16 +1875,22 @@
 	// eslint-disable-next-line es/no-array-prototype-foreach -- safe
 	} : [].forEach;
 
-	for (var COLLECTION_NAME in domIterables) {
-	  var Collection = global_1[COLLECTION_NAME];
-	  var CollectionPrototype = Collection && Collection.prototype;
+	var handlePrototype = function (CollectionPrototype) {
 	  // some Chrome versions have non-configurable methods on DOMTokenList
 	  if (CollectionPrototype && CollectionPrototype.forEach !== arrayForEach) try {
 	    createNonEnumerableProperty(CollectionPrototype, 'forEach', arrayForEach);
 	  } catch (error) {
 	    CollectionPrototype.forEach = arrayForEach;
 	  }
+	};
+
+	for (var COLLECTION_NAME in domIterables) {
+	  if (domIterables[COLLECTION_NAME]) {
+	    handlePrototype(global_1[COLLECTION_NAME] && global_1[COLLECTION_NAME].prototype);
+	  }
 	}
+
+	handlePrototype(domTokenListPrototype);
 
 	// `Object.keys` method
 	// https://tc39.es/ecma262/#sec-object.keys
@@ -1652,6 +1908,587 @@
 	    return objectKeys(toObject(it));
 	  }
 	});
+
+	var String$1 = global_1.String;
+
+	var toString_1 = function (argument) {
+	  if (classof(argument) === 'Symbol') throw TypeError('Cannot convert a Symbol value to a string');
+	  return String$1(argument);
+	};
+
+	// `RegExp.prototype.flags` getter implementation
+	// https://tc39.es/ecma262/#sec-get-regexp.prototype.flags
+	var regexpFlags = function () {
+	  var that = anObject(this);
+	  var result = '';
+	  if (that.global) result += 'g';
+	  if (that.ignoreCase) result += 'i';
+	  if (that.multiline) result += 'm';
+	  if (that.dotAll) result += 's';
+	  if (that.unicode) result += 'u';
+	  if (that.sticky) result += 'y';
+	  return result;
+	};
+
+	// babel-minify and Closure Compiler transpiles RegExp('a', 'y') -> /a/y and it causes SyntaxError
+	var $RegExp$2 = global_1.RegExp;
+
+	var UNSUPPORTED_Y$2 = fails(function () {
+	  var re = $RegExp$2('a', 'y');
+	  re.lastIndex = 2;
+	  return re.exec('abcd') != null;
+	});
+
+	// UC Browser bug
+	// https://github.com/zloirock/core-js/issues/1008
+	var MISSED_STICKY = UNSUPPORTED_Y$2 || fails(function () {
+	  return !$RegExp$2('a', 'y').sticky;
+	});
+
+	var BROKEN_CARET = UNSUPPORTED_Y$2 || fails(function () {
+	  // https://bugzilla.mozilla.org/show_bug.cgi?id=773687
+	  var re = $RegExp$2('^r', 'gy');
+	  re.lastIndex = 2;
+	  return re.exec('str') != null;
+	});
+
+	var regexpStickyHelpers = {
+	  BROKEN_CARET: BROKEN_CARET,
+	  MISSED_STICKY: MISSED_STICKY,
+	  UNSUPPORTED_Y: UNSUPPORTED_Y$2
+	};
+
+	// `Object.defineProperties` method
+	// https://tc39.es/ecma262/#sec-object.defineproperties
+	// eslint-disable-next-line es/no-object-defineproperties -- safe
+	var objectDefineProperties = descriptors ? Object.defineProperties : function defineProperties(O, Properties) {
+	  anObject(O);
+	  var props = toIndexedObject(Properties);
+	  var keys = objectKeys(Properties);
+	  var length = keys.length;
+	  var index = 0;
+	  var key;
+	  while (length > index) objectDefineProperty.f(O, key = keys[index++], props[key]);
+	  return O;
+	};
+
+	/* global ActiveXObject -- old IE, WSH */
+
+
+
+
+
+
+
+
+	var GT = '>';
+	var LT = '<';
+	var PROTOTYPE = 'prototype';
+	var SCRIPT = 'script';
+	var IE_PROTO = sharedKey('IE_PROTO');
+
+	var EmptyConstructor = function () { /* empty */ };
+
+	var scriptTag = function (content) {
+	  return LT + SCRIPT + GT + content + LT + '/' + SCRIPT + GT;
+	};
+
+	// Create object with fake `null` prototype: use ActiveX Object with cleared prototype
+	var NullProtoObjectViaActiveX = function (activeXDocument) {
+	  activeXDocument.write(scriptTag(''));
+	  activeXDocument.close();
+	  var temp = activeXDocument.parentWindow.Object;
+	  activeXDocument = null; // avoid memory leak
+	  return temp;
+	};
+
+	// Create object with fake `null` prototype: use iframe Object with cleared prototype
+	var NullProtoObjectViaIFrame = function () {
+	  // Thrash, waste and sodomy: IE GC bug
+	  var iframe = documentCreateElement('iframe');
+	  var JS = 'java' + SCRIPT + ':';
+	  var iframeDocument;
+	  iframe.style.display = 'none';
+	  html.appendChild(iframe);
+	  // https://github.com/zloirock/core-js/issues/475
+	  iframe.src = String(JS);
+	  iframeDocument = iframe.contentWindow.document;
+	  iframeDocument.open();
+	  iframeDocument.write(scriptTag('document.F=Object'));
+	  iframeDocument.close();
+	  return iframeDocument.F;
+	};
+
+	// Check for document.domain and active x support
+	// No need to use active x approach when document.domain is not set
+	// see https://github.com/es-shims/es5-shim/issues/150
+	// variation of https://github.com/kitcambridge/es5-shim/commit/4f738ac066346
+	// avoid IE GC bug
+	var activeXDocument;
+	var NullProtoObject = function () {
+	  try {
+	    activeXDocument = new ActiveXObject('htmlfile');
+	  } catch (error) { /* ignore */ }
+	  NullProtoObject = typeof document != 'undefined'
+	    ? document.domain && activeXDocument
+	      ? NullProtoObjectViaActiveX(activeXDocument) // old IE
+	      : NullProtoObjectViaIFrame()
+	    : NullProtoObjectViaActiveX(activeXDocument); // WSH
+	  var length = enumBugKeys.length;
+	  while (length--) delete NullProtoObject[PROTOTYPE][enumBugKeys[length]];
+	  return NullProtoObject();
+	};
+
+	hiddenKeys$1[IE_PROTO] = true;
+
+	// `Object.create` method
+	// https://tc39.es/ecma262/#sec-object.create
+	var objectCreate = Object.create || function create(O, Properties) {
+	  var result;
+	  if (O !== null) {
+	    EmptyConstructor[PROTOTYPE] = anObject(O);
+	    result = new EmptyConstructor();
+	    EmptyConstructor[PROTOTYPE] = null;
+	    // add "__proto__" for Object.getPrototypeOf polyfill
+	    result[IE_PROTO] = O;
+	  } else result = NullProtoObject();
+	  return Properties === undefined ? result : objectDefineProperties(result, Properties);
+	};
+
+	// babel-minify and Closure Compiler transpiles RegExp('.', 's') -> /./s and it causes SyntaxError
+	var $RegExp$1 = global_1.RegExp;
+
+	var regexpUnsupportedDotAll = fails(function () {
+	  var re = $RegExp$1('.', 's');
+	  return !(re.dotAll && re.exec('\n') && re.flags === 's');
+	});
+
+	// babel-minify and Closure Compiler transpiles RegExp('(?<a>b)', 'g') -> /(?<a>b)/g and it causes SyntaxError
+	var $RegExp = global_1.RegExp;
+
+	var regexpUnsupportedNcg = fails(function () {
+	  var re = $RegExp('(?<a>b)', 'g');
+	  return re.exec('b').groups.a !== 'b' ||
+	    'b'.replace(re, '$<a>c') !== 'bc';
+	});
+
+	/* eslint-disable regexp/no-empty-capturing-group, regexp/no-empty-group, regexp/no-lazy-ends -- testing */
+	/* eslint-disable regexp/no-useless-quantifier -- testing */
+
+
+
+
+
+
+
+	var getInternalState = internalState.get;
+
+
+
+	var nativeReplace = shared('native-string-replace', String.prototype.replace);
+	var nativeExec = RegExp.prototype.exec;
+	var patchedExec = nativeExec;
+	var charAt$2 = functionUncurryThis(''.charAt);
+	var indexOf = functionUncurryThis(''.indexOf);
+	var replace = functionUncurryThis(''.replace);
+	var stringSlice$2 = functionUncurryThis(''.slice);
+
+	var UPDATES_LAST_INDEX_WRONG = (function () {
+	  var re1 = /a/;
+	  var re2 = /b*/g;
+	  functionCall(nativeExec, re1, 'a');
+	  functionCall(nativeExec, re2, 'a');
+	  return re1.lastIndex !== 0 || re2.lastIndex !== 0;
+	})();
+
+	var UNSUPPORTED_Y$1 = regexpStickyHelpers.BROKEN_CARET;
+
+	// nonparticipating capturing group, copied from es5-shim's String#split patch.
+	var NPCG_INCLUDED = /()??/.exec('')[1] !== undefined;
+
+	var PATCH = UPDATES_LAST_INDEX_WRONG || NPCG_INCLUDED || UNSUPPORTED_Y$1 || regexpUnsupportedDotAll || regexpUnsupportedNcg;
+
+	if (PATCH) {
+	  patchedExec = function exec(string) {
+	    var re = this;
+	    var state = getInternalState(re);
+	    var str = toString_1(string);
+	    var raw = state.raw;
+	    var result, reCopy, lastIndex, match, i, object, group;
+
+	    if (raw) {
+	      raw.lastIndex = re.lastIndex;
+	      result = functionCall(patchedExec, raw, str);
+	      re.lastIndex = raw.lastIndex;
+	      return result;
+	    }
+
+	    var groups = state.groups;
+	    var sticky = UNSUPPORTED_Y$1 && re.sticky;
+	    var flags = functionCall(regexpFlags, re);
+	    var source = re.source;
+	    var charsAdded = 0;
+	    var strCopy = str;
+
+	    if (sticky) {
+	      flags = replace(flags, 'y', '');
+	      if (indexOf(flags, 'g') === -1) {
+	        flags += 'g';
+	      }
+
+	      strCopy = stringSlice$2(str, re.lastIndex);
+	      // Support anchored sticky behavior.
+	      if (re.lastIndex > 0 && (!re.multiline || re.multiline && charAt$2(str, re.lastIndex - 1) !== '\n')) {
+	        source = '(?: ' + source + ')';
+	        strCopy = ' ' + strCopy;
+	        charsAdded++;
+	      }
+	      // ^(? + rx + ) is needed, in combination with some str slicing, to
+	      // simulate the 'y' flag.
+	      reCopy = new RegExp('^(?:' + source + ')', flags);
+	    }
+
+	    if (NPCG_INCLUDED) {
+	      reCopy = new RegExp('^' + source + '$(?!\\s)', flags);
+	    }
+	    if (UPDATES_LAST_INDEX_WRONG) lastIndex = re.lastIndex;
+
+	    match = functionCall(nativeExec, sticky ? reCopy : re, strCopy);
+
+	    if (sticky) {
+	      if (match) {
+	        match.input = stringSlice$2(match.input, charsAdded);
+	        match[0] = stringSlice$2(match[0], charsAdded);
+	        match.index = re.lastIndex;
+	        re.lastIndex += match[0].length;
+	      } else re.lastIndex = 0;
+	    } else if (UPDATES_LAST_INDEX_WRONG && match) {
+	      re.lastIndex = re.global ? match.index + match[0].length : lastIndex;
+	    }
+	    if (NPCG_INCLUDED && match && match.length > 1) {
+	      // Fix browsers whose `exec` methods don't consistently return `undefined`
+	      // for NPCG, like IE8. NOTE: This doesn' work for /(.?)?/
+	      functionCall(nativeReplace, match[0], reCopy, function () {
+	        for (i = 1; i < arguments.length - 2; i++) {
+	          if (arguments[i] === undefined) match[i] = undefined;
+	        }
+	      });
+	    }
+
+	    if (match && groups) {
+	      match.groups = object = objectCreate(null);
+	      for (i = 0; i < groups.length; i++) {
+	        group = groups[i];
+	        object[group[0]] = match[group[1]];
+	      }
+	    }
+
+	    return match;
+	  };
+	}
+
+	var regexpExec = patchedExec;
+
+	// `RegExp.prototype.exec` method
+	// https://tc39.es/ecma262/#sec-regexp.prototype.exec
+	_export({ target: 'RegExp', proto: true, forced: /./.exec !== regexpExec }, {
+	  exec: regexpExec
+	});
+
+	// TODO: Remove from `core-js@4` since it's moved to entry points
+
+
+
+
+
+
+
+
+	var SPECIES = wellKnownSymbol('species');
+	var RegExpPrototype = RegExp.prototype;
+
+	var fixRegexpWellKnownSymbolLogic = function (KEY, exec, FORCED, SHAM) {
+	  var SYMBOL = wellKnownSymbol(KEY);
+
+	  var DELEGATES_TO_SYMBOL = !fails(function () {
+	    // String methods call symbol-named RegEp methods
+	    var O = {};
+	    O[SYMBOL] = function () { return 7; };
+	    return ''[KEY](O) != 7;
+	  });
+
+	  var DELEGATES_TO_EXEC = DELEGATES_TO_SYMBOL && !fails(function () {
+	    // Symbol-named RegExp methods call .exec
+	    var execCalled = false;
+	    var re = /a/;
+
+	    if (KEY === 'split') {
+	      // We can't use real regex here since it causes deoptimization
+	      // and serious performance degradation in V8
+	      // https://github.com/zloirock/core-js/issues/306
+	      re = {};
+	      // RegExp[@@split] doesn't call the regex's exec method, but first creates
+	      // a new one. We need to return the patched regex when creating the new one.
+	      re.constructor = {};
+	      re.constructor[SPECIES] = function () { return re; };
+	      re.flags = '';
+	      re[SYMBOL] = /./[SYMBOL];
+	    }
+
+	    re.exec = function () { execCalled = true; return null; };
+
+	    re[SYMBOL]('');
+	    return !execCalled;
+	  });
+
+	  if (
+	    !DELEGATES_TO_SYMBOL ||
+	    !DELEGATES_TO_EXEC ||
+	    FORCED
+	  ) {
+	    var uncurriedNativeRegExpMethod = functionUncurryThis(/./[SYMBOL]);
+	    var methods = exec(SYMBOL, ''[KEY], function (nativeMethod, regexp, str, arg2, forceStringMethod) {
+	      var uncurriedNativeMethod = functionUncurryThis(nativeMethod);
+	      var $exec = regexp.exec;
+	      if ($exec === regexpExec || $exec === RegExpPrototype.exec) {
+	        if (DELEGATES_TO_SYMBOL && !forceStringMethod) {
+	          // The native String method already delegates to @@method (this
+	          // polyfilled function), leasing to infinite recursion.
+	          // We avoid it by directly calling the native @@method method.
+	          return { done: true, value: uncurriedNativeRegExpMethod(regexp, str, arg2) };
+	        }
+	        return { done: true, value: uncurriedNativeMethod(str, regexp, arg2) };
+	      }
+	      return { done: false };
+	    });
+
+	    redefine(String.prototype, KEY, methods[0]);
+	    redefine(RegExpPrototype, SYMBOL, methods[1]);
+	  }
+
+	  if (SHAM) createNonEnumerableProperty(RegExpPrototype[SYMBOL], 'sham', true);
+	};
+
+	var MATCH = wellKnownSymbol('match');
+
+	// `IsRegExp` abstract operation
+	// https://tc39.es/ecma262/#sec-isregexp
+	var isRegexp = function (it) {
+	  var isRegExp;
+	  return isObject(it) && ((isRegExp = it[MATCH]) !== undefined ? !!isRegExp : classofRaw(it) == 'RegExp');
+	};
+
+	var charAt$1 = functionUncurryThis(''.charAt);
+	var charCodeAt = functionUncurryThis(''.charCodeAt);
+	var stringSlice$1 = functionUncurryThis(''.slice);
+
+	var createMethod = function (CONVERT_TO_STRING) {
+	  return function ($this, pos) {
+	    var S = toString_1(requireObjectCoercible($this));
+	    var position = toIntegerOrInfinity(pos);
+	    var size = S.length;
+	    var first, second;
+	    if (position < 0 || position >= size) return CONVERT_TO_STRING ? '' : undefined;
+	    first = charCodeAt(S, position);
+	    return first < 0xD800 || first > 0xDBFF || position + 1 === size
+	      || (second = charCodeAt(S, position + 1)) < 0xDC00 || second > 0xDFFF
+	        ? CONVERT_TO_STRING
+	          ? charAt$1(S, position)
+	          : first
+	        : CONVERT_TO_STRING
+	          ? stringSlice$1(S, position, position + 2)
+	          : (first - 0xD800 << 10) + (second - 0xDC00) + 0x10000;
+	  };
+	};
+
+	var stringMultibyte = {
+	  // `String.prototype.codePointAt` method
+	  // https://tc39.es/ecma262/#sec-string.prototype.codepointat
+	  codeAt: createMethod(false),
+	  // `String.prototype.at` method
+	  // https://github.com/mathiasbynens/String.prototype.at
+	  charAt: createMethod(true)
+	};
+
+	var charAt = stringMultibyte.charAt;
+
+	// `AdvanceStringIndex` abstract operation
+	// https://tc39.es/ecma262/#sec-advancestringindex
+	var advanceStringIndex = function (S, index, unicode) {
+	  return index + (unicode ? charAt(S, index).length : 1);
+	};
+
+	var createProperty = function (object, key, value) {
+	  var propertyKey = toPropertyKey(key);
+	  if (propertyKey in object) objectDefineProperty.f(object, propertyKey, createPropertyDescriptor(0, value));
+	  else object[propertyKey] = value;
+	};
+
+	var Array$1 = global_1.Array;
+	var max = Math.max;
+
+	var arraySliceSimple = function (O, start, end) {
+	  var length = lengthOfArrayLike(O);
+	  var k = toAbsoluteIndex(start, length);
+	  var fin = toAbsoluteIndex(end === undefined ? length : end, length);
+	  var result = Array$1(max(fin - k, 0));
+	  for (var n = 0; k < fin; k++, n++) createProperty(result, n, O[k]);
+	  result.length = n;
+	  return result;
+	};
+
+	var TypeError$1 = global_1.TypeError;
+
+	// `RegExpExec` abstract operation
+	// https://tc39.es/ecma262/#sec-regexpexec
+	var regexpExecAbstract = function (R, S) {
+	  var exec = R.exec;
+	  if (isCallable(exec)) {
+	    var result = functionCall(exec, R, S);
+	    if (result !== null) anObject(result);
+	    return result;
+	  }
+	  if (classofRaw(R) === 'RegExp') return functionCall(regexpExec, R, S);
+	  throw TypeError$1('RegExp#exec called on incompatible receiver');
+	};
+
+	var UNSUPPORTED_Y = regexpStickyHelpers.UNSUPPORTED_Y;
+	var MAX_UINT32 = 0xFFFFFFFF;
+	var min = Math.min;
+	var $push = [].push;
+	var exec = functionUncurryThis(/./.exec);
+	var push = functionUncurryThis($push);
+	var stringSlice = functionUncurryThis(''.slice);
+
+	// Chrome 51 has a buggy "split" implementation when RegExp#exec !== nativeExec
+	// Weex JS has frozen built-in prototypes, so use try / catch wrapper
+	var SPLIT_WORKS_WITH_OVERWRITTEN_EXEC = !fails(function () {
+	  // eslint-disable-next-line regexp/no-empty-group -- required for testing
+	  var re = /(?:)/;
+	  var originalExec = re.exec;
+	  re.exec = function () { return originalExec.apply(this, arguments); };
+	  var result = 'ab'.split(re);
+	  return result.length !== 2 || result[0] !== 'a' || result[1] !== 'b';
+	});
+
+	// @@split logic
+	fixRegexpWellKnownSymbolLogic('split', function (SPLIT, nativeSplit, maybeCallNative) {
+	  var internalSplit;
+	  if (
+	    'abbc'.split(/(b)*/)[1] == 'c' ||
+	    // eslint-disable-next-line regexp/no-empty-group -- required for testing
+	    'test'.split(/(?:)/, -1).length != 4 ||
+	    'ab'.split(/(?:ab)*/).length != 2 ||
+	    '.'.split(/(.?)(.?)/).length != 4 ||
+	    // eslint-disable-next-line regexp/no-empty-capturing-group, regexp/no-empty-group -- required for testing
+	    '.'.split(/()()/).length > 1 ||
+	    ''.split(/.?/).length
+	  ) {
+	    // based on es5-shim implementation, need to rework it
+	    internalSplit = function (separator, limit) {
+	      var string = toString_1(requireObjectCoercible(this));
+	      var lim = limit === undefined ? MAX_UINT32 : limit >>> 0;
+	      if (lim === 0) return [];
+	      if (separator === undefined) return [string];
+	      // If `separator` is not a regex, use native split
+	      if (!isRegexp(separator)) {
+	        return functionCall(nativeSplit, string, separator, lim);
+	      }
+	      var output = [];
+	      var flags = (separator.ignoreCase ? 'i' : '') +
+	                  (separator.multiline ? 'm' : '') +
+	                  (separator.unicode ? 'u' : '') +
+	                  (separator.sticky ? 'y' : '');
+	      var lastLastIndex = 0;
+	      // Make `global` and avoid `lastIndex` issues by working with a copy
+	      var separatorCopy = new RegExp(separator.source, flags + 'g');
+	      var match, lastIndex, lastLength;
+	      while (match = functionCall(regexpExec, separatorCopy, string)) {
+	        lastIndex = separatorCopy.lastIndex;
+	        if (lastIndex > lastLastIndex) {
+	          push(output, stringSlice(string, lastLastIndex, match.index));
+	          if (match.length > 1 && match.index < string.length) functionApply($push, output, arraySliceSimple(match, 1));
+	          lastLength = match[0].length;
+	          lastLastIndex = lastIndex;
+	          if (output.length >= lim) break;
+	        }
+	        if (separatorCopy.lastIndex === match.index) separatorCopy.lastIndex++; // Avoid an infinite loop
+	      }
+	      if (lastLastIndex === string.length) {
+	        if (lastLength || !exec(separatorCopy, '')) push(output, '');
+	      } else push(output, stringSlice(string, lastLastIndex));
+	      return output.length > lim ? arraySliceSimple(output, 0, lim) : output;
+	    };
+	  // Chakra, V8
+	  } else if ('0'.split(undefined, 0).length) {
+	    internalSplit = function (separator, limit) {
+	      return separator === undefined && limit === 0 ? [] : functionCall(nativeSplit, this, separator, limit);
+	    };
+	  } else internalSplit = nativeSplit;
+
+	  return [
+	    // `String.prototype.split` method
+	    // https://tc39.es/ecma262/#sec-string.prototype.split
+	    function split(separator, limit) {
+	      var O = requireObjectCoercible(this);
+	      var splitter = separator == undefined ? undefined : getMethod(separator, SPLIT);
+	      return splitter
+	        ? functionCall(splitter, separator, O, limit)
+	        : functionCall(internalSplit, toString_1(O), separator, limit);
+	    },
+	    // `RegExp.prototype[@@split]` method
+	    // https://tc39.es/ecma262/#sec-regexp.prototype-@@split
+	    //
+	    // NOTE: This cannot be properly polyfilled in engines that don't support
+	    // the 'y' flag.
+	    function (string, limit) {
+	      var rx = anObject(this);
+	      var S = toString_1(string);
+	      var res = maybeCallNative(internalSplit, rx, S, limit, internalSplit !== nativeSplit);
+
+	      if (res.done) return res.value;
+
+	      var C = speciesConstructor(rx, RegExp);
+
+	      var unicodeMatching = rx.unicode;
+	      var flags = (rx.ignoreCase ? 'i' : '') +
+	                  (rx.multiline ? 'm' : '') +
+	                  (rx.unicode ? 'u' : '') +
+	                  (UNSUPPORTED_Y ? 'g' : 'y');
+
+	      // ^(? + rx + ) is needed, in combination with some S slicing, to
+	      // simulate the 'y' flag.
+	      var splitter = new C(UNSUPPORTED_Y ? '^(?:' + rx.source + ')' : rx, flags);
+	      var lim = limit === undefined ? MAX_UINT32 : limit >>> 0;
+	      if (lim === 0) return [];
+	      if (S.length === 0) return regexpExecAbstract(splitter, S) === null ? [S] : [];
+	      var p = 0;
+	      var q = 0;
+	      var A = [];
+	      while (q < S.length) {
+	        splitter.lastIndex = UNSUPPORTED_Y ? 0 : q;
+	        var z = regexpExecAbstract(splitter, UNSUPPORTED_Y ? stringSlice(S, q) : S);
+	        var e;
+	        if (
+	          z === null ||
+	          (e = min(toLength(splitter.lastIndex + (UNSUPPORTED_Y ? q : 0)), S.length)) === p
+	        ) {
+	          q = advanceStringIndex(S, q, unicodeMatching);
+	        } else {
+	          push(A, stringSlice(S, p, q));
+	          if (A.length === lim) return A;
+	          for (var i = 1; i <= z.length - 1; i++) {
+	            push(A, z[i]);
+	            if (A.length === lim) return A;
+	          }
+	          q = p = e;
+	        }
+	      }
+	      push(A, stringSlice(S, p));
+	      return A;
+	    }
+	  ];
+	}, !SPLIT_WORKS_WITH_OVERWRITTEN_EXEC, UNSUPPORTED_Y);
 
 	var ARG_LENGTH = {
 	  a: 7,
@@ -1689,7 +2526,7 @@
 	  var data = [];
 	  var p = String(path).trim(); // A path data segment (if there is one) must begin with a "moveto" command
 
-	  if (p[0] !== 'M' && p[0] !== 'm') {
+	  if (p[0] !== "M" && p[0] !== "m") {
 	    return data;
 	  }
 
@@ -1698,15 +2535,15 @@
 	    var theArgs = parseValues(args);
 	    var theCommand = command; // overloaded moveTo
 
-	    if (type === 'm' && theArgs.length > 2) {
+	    if (type === "m" && theArgs.length > 2) {
 	      data.push([theCommand].concat(theArgs.splice(0, 2)));
-	      type = 'l';
-	      theCommand = theCommand === 'm' ? 'l' : 'L';
+	      type = "l";
+	      theCommand = theCommand === "m" ? "l" : "L";
 	    } // Ignore invalid commands
 
 
 	    if (theArgs.length < ARG_LENGTH[type]) {
-	      return '';
+	      return "";
 	    }
 
 	    data.push([theCommand].concat(theArgs.splice(0, ARG_LENGTH[type]))); // The command letter can be eliminated on subsequent commands if the
@@ -1718,12 +2555,12 @@
 	      data.push([theCommand].concat(theArgs.splice(0, ARG_LENGTH[type])));
 	    }
 
-	    return '';
+	    return "";
 	  });
 	  return data;
 	}
 
-	var parsePath = parse;
+	var parsePath$2 = parse;
 
 	function _classCallCheck(instance, Constructor) {
 	  if (!(instance instanceof Constructor)) {
@@ -1780,16 +2617,17 @@
 	  throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
 	}
 
+	var parsePath$1 = parsePath$2;
 	/**
 	 * Work around for https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/8438884/
 	 * @ignore
 	 */
 
 	function supportsSvgPathArgument(window) {
-	  var canvas = window.document.createElement('canvas');
-	  var g = canvas.getContext('2d');
-	  var p = new window.Path2D('M0 0 L1 1');
-	  g.strokeStyle = 'red';
+	  var canvas = window.document.createElement("canvas");
+	  var g = canvas.getContext("2d");
+	  var p = new window.Path2D("M0 0 L1 1");
+	  g.strokeStyle = "red";
 	  g.lineWidth = 1;
 	  g.stroke(p);
 	  var imgData = g.getImageData(0, 0, 1, 1);
@@ -1814,7 +2652,7 @@
 	}
 
 	function polyFillPath2D(window) {
-	  if (typeof window === 'undefined' || !window.CanvasRenderingContext2D) {
+	  if (typeof window === "undefined" || !window.CanvasRenderingContext2D) {
 	    return;
 	  }
 
@@ -1840,7 +2678,7 @@
 
 	        (_this$segments = this.segments).push.apply(_this$segments, _toConsumableArray(path.segments));
 	      } else if (path) {
-	        this.segments = parsePath(path);
+	        this.segments = parsePath$1(path);
 	      }
 	    }
 
@@ -1856,47 +2694,47 @@
 	    }, {
 	      key: "moveTo",
 	      value: function moveTo(x, y) {
-	        this.segments.push(['M', x, y]);
+	        this.segments.push(["M", x, y]);
 	      }
 	    }, {
 	      key: "lineTo",
 	      value: function lineTo(x, y) {
-	        this.segments.push(['L', x, y]);
+	        this.segments.push(["L", x, y]);
 	      }
 	    }, {
 	      key: "arc",
 	      value: function arc(x, y, r, start, end, ccw) {
-	        this.segments.push(['AC', x, y, r, start, end, !!ccw]);
+	        this.segments.push(["AC", x, y, r, start, end, !!ccw]);
 	      }
 	    }, {
 	      key: "arcTo",
 	      value: function arcTo(x1, y1, x2, y2, r) {
-	        this.segments.push(['AT', x1, y1, x2, y2, r]);
+	        this.segments.push(["AT", x1, y1, x2, y2, r]);
 	      }
 	    }, {
 	      key: "ellipse",
 	      value: function ellipse(x, y, rx, ry, angle, start, end, ccw) {
-	        this.segments.push(['E', x, y, rx, ry, angle, start, end, !!ccw]);
+	        this.segments.push(["E", x, y, rx, ry, angle, start, end, !!ccw]);
 	      }
 	    }, {
 	      key: "closePath",
 	      value: function closePath() {
-	        this.segments.push(['Z']);
+	        this.segments.push(["Z"]);
 	      }
 	    }, {
 	      key: "bezierCurveTo",
 	      value: function bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y) {
-	        this.segments.push(['C', cp1x, cp1y, cp2x, cp2y, x, y]);
+	        this.segments.push(["C", cp1x, cp1y, cp2x, cp2y, x, y]);
 	      }
 	    }, {
 	      key: "quadraticCurveTo",
 	      value: function quadraticCurveTo(cpx, cpy, x, y) {
-	        this.segments.push(['Q', cpx, cpy, x, y]);
+	        this.segments.push(["Q", cpx, cpy, x, y]);
 	      }
 	    }, {
 	      key: "rect",
 	      value: function rect(x, y, width, height) {
-	        this.segments.push(['R', x, y, width, height]);
+	        this.segments.push(["R", x, y, width, height]);
 	      }
 	    }]);
 
@@ -1944,20 +2782,20 @@
 	      var s = segments[i];
 	      pathType = s[0]; // Reset control point if command is not cubic
 
-	      if (pathType !== 'S' && pathType !== 's' && pathType !== 'C' && pathType !== 'c') {
+	      if (pathType !== "S" && pathType !== "s" && pathType !== "C" && pathType !== "c") {
 	        cpx = null;
 	        cpy = null;
 	      }
 
-	      if (pathType !== 'T' && pathType !== 't' && pathType !== 'Q' && pathType !== 'q') {
+	      if (pathType !== "T" && pathType !== "t" && pathType !== "Q" && pathType !== "q") {
 	        qcpx = null;
 	        qcpy = null;
 	      }
 
 	      switch (pathType) {
-	        case 'm':
-	        case 'M':
-	          if (pathType === 'm') {
+	        case "m":
+	        case "M":
+	          if (pathType === "m") {
 	            x += s[1];
 	            y += s[2];
 	          } else {
@@ -1965,7 +2803,7 @@
 	            y = s[2];
 	          }
 
-	          if (pathType === 'M' || !startPoint) {
+	          if (pathType === "M" || !startPoint) {
 	            startPoint = {
 	              x: x,
 	              y: y
@@ -1975,41 +2813,41 @@
 	          canvas.moveTo(x, y);
 	          break;
 
-	        case 'l':
+	        case "l":
 	          x += s[1];
 	          y += s[2];
 	          canvas.lineTo(x, y);
 	          break;
 
-	        case 'L':
+	        case "L":
 	          x = s[1];
 	          y = s[2];
 	          canvas.lineTo(x, y);
 	          break;
 
-	        case 'H':
+	        case "H":
 	          x = s[1];
 	          canvas.lineTo(x, y);
 	          break;
 
-	        case 'h':
+	        case "h":
 	          x += s[1];
 	          canvas.lineTo(x, y);
 	          break;
 
-	        case 'V':
+	        case "V":
 	          y = s[1];
 	          canvas.lineTo(x, y);
 	          break;
 
-	        case 'v':
+	        case "v":
 	          y += s[1];
 	          canvas.lineTo(x, y);
 	          break;
 
-	        case 'a':
-	        case 'A':
-	          if (pathType === 'a') {
+	        case "a":
+	        case "A":
+	          if (pathType === "a") {
 	            x += s[6];
 	            y += s[7];
 	          } else {
@@ -2068,7 +2906,7 @@
 	          canvas.restore();
 	          break;
 
-	        case 'C':
+	        case "C":
 	          cpx = s[3]; // Last control point
 
 	          cpy = s[4];
@@ -2077,7 +2915,7 @@
 	          canvas.bezierCurveTo(s[1], s[2], cpx, cpy, x, y);
 	          break;
 
-	        case 'c':
+	        case "c":
 	          canvas.bezierCurveTo(s[1] + x, s[2] + y, s[3] + x, s[4] + y, s[5] + x, s[6] + y);
 	          cpx = s[3] + x; // Last control point
 
@@ -2086,8 +2924,8 @@
 	          y += s[6];
 	          break;
 
-	        case 'S':
-	          if (cpx === null || cpx === null) {
+	        case "S":
+	          if (cpx === null || cpy === null) {
 	            cpx = x;
 	            cpy = y;
 	          }
@@ -2100,8 +2938,8 @@
 	          y = s[4];
 	          break;
 
-	        case 's':
-	          if (cpx === null || cpx === null) {
+	        case "s":
+	          if (cpx === null || cpy === null) {
 	            cpx = x;
 	            cpy = y;
 	          }
@@ -2114,7 +2952,7 @@
 	          y += s[4];
 	          break;
 
-	        case 'Q':
+	        case "Q":
 	          qcpx = s[1]; // last control point
 
 	          qcpy = s[2];
@@ -2123,7 +2961,7 @@
 	          canvas.quadraticCurveTo(qcpx, qcpy, x, y);
 	          break;
 
-	        case 'q':
+	        case "q":
 	          qcpx = s[1] + x; // last control point
 
 	          qcpy = s[2] + y;
@@ -2132,8 +2970,8 @@
 	          canvas.quadraticCurveTo(qcpx, qcpy, x, y);
 	          break;
 
-	        case 'T':
-	          if (qcpx === null || qcpx === null) {
+	        case "T":
+	          if (qcpx === null || qcpy === null) {
 	            qcpx = x;
 	            qcpy = y;
 	          }
@@ -2146,8 +2984,8 @@
 	          canvas.quadraticCurveTo(qcpx, qcpy, x, y);
 	          break;
 
-	        case 't':
-	          if (qcpx === null || qcpx === null) {
+	        case "t":
+	          if (qcpx === null || qcpy === null) {
 	            qcpx = x;
 	            qcpy = y;
 	          }
@@ -2160,15 +2998,15 @@
 	          canvas.quadraticCurveTo(qcpx, qcpy, x, y);
 	          break;
 
-	        case 'z':
-	        case 'Z':
+	        case "z":
+	        case "Z":
 	          x = startPoint.x;
 	          y = startPoint.y;
 	          startPoint = undefined;
 	          canvas.closePath();
 	          break;
 
-	        case 'AC':
+	        case "AC":
 	          // arc
 	          x = s[1];
 	          y = s[2];
@@ -2179,7 +3017,7 @@
 	          canvas.arc(x, y, r, startAngle, endAngle, ccw);
 	          break;
 
-	        case 'AT':
+	        case "AT":
 	          // arcTo
 	          x1 = s[1];
 	          y1 = s[2];
@@ -2189,7 +3027,7 @@
 	          canvas.arcTo(x1, y1, x, y, r);
 	          break;
 
-	        case 'E':
+	        case "E":
 	          // ellipse
 	          x = s[1];
 	          y = s[2];
@@ -2207,7 +3045,7 @@
 	          canvas.restore();
 	          break;
 
-	        case 'R':
+	        case "R":
 	          // rect
 	          x = s[1];
 	          y = s[2];
@@ -2235,9 +3073,9 @@
 	      args[_key] = arguments[_key];
 	    }
 
-	    var fillRule = 'nonzero';
+	    var fillRule = "nonzero";
 
-	    if (args.length === 0 || args.length === 1 && typeof args[0] === 'string') {
+	    if (args.length === 0 || args.length === 1 && typeof args[0] === "string") {
 	      cFill.apply(this, args);
 	      return;
 	    }
@@ -2269,11 +3107,11 @@
 	    }
 
 	    // let fillRule = 'nonzero';
-	    if (args[0].constructor.name === 'Path2D') {
+	    if (args[0].constructor.name === "Path2D") {
 	      // first argument is a Path2D object
 	      var x = args[1];
 	      var y = args[2];
-	      var fillRule = args[3] || 'nonzero';
+	      var fillRule = args[3] || "nonzero";
 	      var path = args[0];
 	      buildPath(this, path.segments);
 	      return cIsPointInPath.apply(this, [x, y, fillRule]);
@@ -2285,9 +3123,10 @@
 	  window.Path2D = Path2D;
 	}
 
-	var path2dPolyfill = polyFillPath2D;
+	var path2dPolyfill$1 = polyFillPath2D;
+	var path2dPolyfill = path2dPolyfill$1;
 
-	if (typeof window !== 'undefined') {
+	if (typeof window !== "undefined") {
 	  path2dPolyfill(window);
 	}
 
@@ -3639,7 +4478,8 @@
 
 	var Renderer = {
 	  drawPBF: function drawPBF(tile, url, coords, pcoords) {
-	    return fetch(url).then(function (res) {
+	    // return fetch(url, { mode: 'cors' })
+	    return fetch(url, {}).then(function (res) {
 	      if (res.status === 404) {
 	        throw new TypeError('tile skiped: ' + url);
 	      }
@@ -3648,6 +4488,7 @@
 	    }).then(function (blob) {
 	      return blob.arrayBuffer();
 	    }).then(function (buf) {
+	      var zoom = coords.z;
 	      var d = coords.z - pcoords.z;
 	      var scale = 1;
 	      var dx = 0;
@@ -3667,38 +4508,84 @@
 	          layers = _VectorTile.layers;
 
 	      var ctx = tile.getContext("2d");
-	      ctx.strokeStyle = 'red';
+	      ctx.strokeStyle = 'red'; // console.log('layers', layers);
+
 	      Object.keys(layers).forEach(function (k) {
 	        var lineWidth = 0;
+	        var type = 0;
 
 	        if (k.indexOf('label') !== -1) {
-	          lineWidth = 0;
-	        } else if (k.indexOf('округа') !== -1) {
-	          lineWidth = 1;
-	        } else if (k.indexOf('районы') !== -1) {
-	          lineWidth = 4;
-	        } else if (k.indexOf('кварталы') !== -1) {
-	          lineWidth = 1;
+	          ctx.font = "16px serif";
 	        }
+
+	        if (k.indexOf('округа') !== -1) {
+	          lineWidth = 1;
+	          type = 1;
+
+	          if (zoom > 6) {
+	            lineWidth = 3;
+	            ctx.font = "18px serif";
+	          }
+	        } else if (k.indexOf('районы') !== -1) {
+	          type = 2;
+	          lineWidth = zoom > 6 ? 1 : 0;
+	        } else if (k.indexOf('варталы') !== -1) {
+	          type = 3;
+	          lineWidth = zoom < 11 ? 0 : 1;
+	        } // else if (pcoords.z > 7 && k.indexOf('районы') !== -1) { lineWidth = 2; } 
+	        // else if (pcoords.z > 6 && k.indexOf('варталы') !== -1) { lineWidth = 1; } 
+
 
 	        if (lineWidth) {
 	          (function () {
-	            ctx.lineWidth = lineWidth;
+	            ctx.lineWidth = lineWidth; // ctx.strokeStyle = 'red';
+
 	            var layer = layers[k];
 	            var sc = 256 * scale / layer.extent; // console.log('k', k, coords, pcoords, scale, dx, dy);
 
 	            for (var i = 0; i < layer.length; ++i) {
 	              var vf = layer.feature(i);
-	              var props = vf.properties;
 	              var _coords = vf.loadGeometry()[0];
 
 	              var p = _coords.shift();
 
-	              if (vf.type === 1 && props._name.length === 2) ; else {
-	                path.moveTo(p.x * sc - dx, p.y * sc - dy);
+	              var tx = p.x * sc - dx;
+	              var ty = p.y * sc - dy; // const geo = vf.toGeoJSON(pcoords.x, pcoords.y, pcoords.z);
+	              // console.log('geo', zoom, k, geo.geometry.type, vf.type, geo.properties);
+
+	              if (zoom > 4 && zoom < 13 && vf.type === 1) {
+	                var props = vf.properties;
+	                var title = props._name;
+	                var cntTitle = title.split(':').length; // if (zoom < 9 && props._label_class === 1) { tx = 0; }
+
+	                if (zoom < 9 && type !== 1 && cntTitle === 2) {
+	                  tx = 0;
+	                } // if (zoom < 9 && type !== 1 && props._label_class === 1) { tx = 0; }
+
+
+	                if (zoom >= 9 && type !== 1 && cntTitle === 1) {
+	                  tx = 0;
+	                }
+
+	                if (zoom > 10 && type === 3) {
+	                  tx = 0;
+	                } // if (zoom >= 9 && type !== 1 && props._label_class === 0) { tx = 0; }
+
+
+	                if (tx > 10) {
+	                  // ctx.strokeStyle = 'blue';
+	                  ctx.strokeText(props._name, tx - 10, ty);
+	                } // points.push({pos: [p.x * sc, p.y * sc], vf});
+	                // } else if (vf.type === 1 && props._name.length === 2) {
+
+	              } else if (vf.type === 2 || vf.type === 3) {
+	                // ctx.strokeStyle = 'red';
+	                path.moveTo(tx, ty);
 
 	                _coords.forEach(function (p, i) {
-	                  path.lineTo(p.x * sc - dx, p.y * sc - dy);
+	                  var tx = p.x * sc - dx;
+	                  var ty = p.y * sc - dy;
+	                  path.lineTo(tx, ty);
 	                });
 	              }
 	            }
@@ -3747,5 +4634,5 @@
 	  }
 	};
 
-}());
+})();
 //# sourceMappingURL=dataManager.js.map

@@ -6,11 +6,11 @@ import PbfLayer from './TileLayer.Rosreestr.pbf.js';
 window.addEventListener('load', async () => {
     const map = L.map('map', {}).setView([55.45, 37.37], 4);
 
-	// const dataManager = L.DomUtil.create('canvas', '').transferControlToOffscreen ? new Worker("dataManager.js") : null;
+	const dataManager = L.DomUtil.create('canvas', '').transferControlToOffscreen ? new Worker("dataManager.js") : null;
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
+    // L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        // attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    // }).addTo(map);
 
 	const zoomHook = function(coords) {
 		var tp = {
@@ -33,9 +33,35 @@ window.addEventListener('load', async () => {
 	const prefix = 'https://pkk.rosreestr.ru/';
 	const cadGroup = L.layerGroup([
 		new PbfLayer({
+			// crossOrigin: '*',
+			// maxNativeZoom: 11,
+			maxZoom: 14,
+			dataManager: dataManager,
 			zoomHook: zoomHook,
-			template: prefix + 'arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=2'
-		}),
+			template: 'https://sveltejs.ru/tiles/pkk/{z}/{y}/{x}.pbf',
+			// template: prefix + 'arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=2'
+		})
+		,
+		/*
+		new PbfLayer({
+			// zoomHook: zoomHook,
+			maxZoom: 22,
+			minZoom: 11,
+			template: prefix + 'arcgis/rest/services/Hosted/vt_anno_light/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=2'
+		})
+		,
+		new PbfLayer({
+			zoomHook: zoomHook,
+			template: prefix + 'arcgis/rest/services/Hosted/BASEMAP_OSM/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=2'
+		})
+
+		,
+		https://pkk5.kosmosnimki.ru/arcgis/rest/services/PKK6/CadastreObjects/MapServer/export?service=WMS&request=GetMap&layers=show:30,27,24,23,22&styles=&format=PNG32&transparent=true&version=1.1.1&imageSR=102100&bboxSR=102100&f=image&size=1024,1024&width=1024&height=1024&srs=EPSG:3857&bbox=4163066.3085238403,7494497.749304961,4167958.2783340914,7499389.7191152135
+		
+		https://pkk.rosreestr.ru/arcgis/rest/services/PKK6/CadastreObjects/MapServer/export?layers=show:30,27,24,23,22&dpi=96&format=PNG32&bbox=4270689.644991986,6794946.066087922,4275581.614802368,6799838.035898302&bboxSR=102100&imageSR=102100&size=1024,1024&transparent=true&f=image&_ts=false
+		
+		https://pkk.rosreestr.ru/arcgis/rest/services/PKK6/CadastreObjects/MapServer/export?service=WMS&request=GetMap&layers=show:30,27,24,23,22&styles=&format=PNG32&transparent=true&version=1.1.1&imageSR=102100&bboxSR=102100&f=image&size=1024,1024&width=1024&height=1024&srs=EPSG:3857&bbox=4265797.674539116,6790054.096628777,4275581.614159619,6799838.036249279
+		*/
 		L.tileLayer.wms(prefix + 'arcgis/rest/services/PKK6/CadastreObjects/MapServer/export', {
 			attribution: "ПКК © Росреестр",
 			tileSize: 1024,
@@ -47,12 +73,14 @@ window.addEventListener('load', async () => {
 			transparent: true,
 			size:"1024,1024",
 			maxZoom: 22,
-			minZoom: 14,
+			minZoom: 15,
 			// clickable:true
 		})
 	]);
 	const lc = L.control.layers({
-		osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?sw=1', {
+		// osm: L.tileLayer('https://sveltejs.ru/map/tiles/om/{z}/{x}/{y}.png?sw=1', {
+		// osm: L.tileLayer('https://sveltejs.ru/mapp/om/{z}/{x}/{y}.png', {
+		osm: L.tileLayer('https://sveltejs.ru/tiles/om/{z}/{x}/{y}.png', {
 				attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 			}).addTo(map)
 	}, {
