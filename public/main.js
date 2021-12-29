@@ -861,9 +861,9 @@
     };
   };
 
-  var FunctionPrototype$2 = Function.prototype;
-  var bind$3 = FunctionPrototype$2.bind;
-  var call$1 = FunctionPrototype$2.call;
+  var FunctionPrototype$3 = Function.prototype;
+  var bind$3 = FunctionPrototype$3.bind;
+  var call$1 = FunctionPrototype$3.call;
   var callBind = bind$3 && bind$3.bind(call$1);
 
   var functionUncurryThis = bind$3 ? function (fn) {
@@ -893,12 +893,12 @@
     return classofRaw(it) == 'String' ? split(it, '') : Object$4(it);
   } : Object$4;
 
-  var TypeError$e = global_1.TypeError;
+  var TypeError$f = global_1.TypeError;
 
   // `RequireObjectCoercible` abstract operation
   // https://tc39.es/ecma262/#sec-requireobjectcoercible
   var requireObjectCoercible = function (it) {
-    if (it == undefined) throw TypeError$e("Can't call method on " + it);
+    if (it == undefined) throw TypeError$f("Can't call method on " + it);
     return it;
   };
 
@@ -997,12 +997,12 @@
     }
   };
 
-  var TypeError$d = global_1.TypeError;
+  var TypeError$e = global_1.TypeError;
 
   // `Assert: IsCallable(argument) is true`
   var aCallable = function (argument) {
     if (isCallable(argument)) return argument;
-    throw TypeError$d(tryToString(argument) + ' is not a function');
+    throw TypeError$e(tryToString(argument) + ' is not a function');
   };
 
   // `GetMethod` abstract operation
@@ -1012,7 +1012,7 @@
     return func == null ? undefined : aCallable(func);
   };
 
-  var TypeError$c = global_1.TypeError;
+  var TypeError$d = global_1.TypeError;
 
   // `OrdinaryToPrimitive` abstract operation
   // https://tc39.es/ecma262/#sec-ordinarytoprimitive
@@ -1021,15 +1021,15 @@
     if (pref === 'string' && isCallable(fn = input.toString) && !isObject(val = functionCall(fn, input))) return val;
     if (isCallable(fn = input.valueOf) && !isObject(val = functionCall(fn, input))) return val;
     if (pref !== 'string' && isCallable(fn = input.toString) && !isObject(val = functionCall(fn, input))) return val;
-    throw TypeError$c("Can't convert object to primitive value");
+    throw TypeError$d("Can't convert object to primitive value");
   };
 
   // eslint-disable-next-line es/no-object-defineproperty -- safe
-  var defineProperty$1 = Object.defineProperty;
+  var defineProperty$2 = Object.defineProperty;
 
   var setGlobal = function (key, value) {
     try {
-      defineProperty$1(global_1, key, { value: value, configurable: true, writable: true });
+      defineProperty$2(global_1, key, { value: value, configurable: true, writable: true });
     } catch (error) {
       global_1[key] = value;
     } return value;
@@ -1092,7 +1092,7 @@
     } return WellKnownSymbolsStore[name];
   };
 
-  var TypeError$b = global_1.TypeError;
+  var TypeError$c = global_1.TypeError;
   var TO_PRIMITIVE = wellKnownSymbol('toPrimitive');
 
   // `ToPrimitive` abstract operation
@@ -1105,7 +1105,7 @@
       if (pref === undefined) pref = 'default';
       result = functionCall(exoticToPrim, input, pref);
       if (!isObject(result) || isSymbol(result)) return result;
-      throw TypeError$b("Can't convert object to primitive value");
+      throw TypeError$c("Can't convert object to primitive value");
     }
     if (pref === undefined) pref = 'number';
     return ordinaryToPrimitive(input, pref);
@@ -1153,15 +1153,15 @@
   };
 
   var String$4 = global_1.String;
-  var TypeError$a = global_1.TypeError;
+  var TypeError$b = global_1.TypeError;
 
   // `Assert: Type(argument) is Object`
   var anObject = function (argument) {
     if (isObject(argument)) return argument;
-    throw TypeError$a(String$4(argument) + ' is not an object');
+    throw TypeError$b(String$4(argument) + ' is not an object');
   };
 
-  var TypeError$9 = global_1.TypeError;
+  var TypeError$a = global_1.TypeError;
   // eslint-disable-next-line es/no-object-defineproperty -- safe
   var $defineProperty = Object.defineProperty;
 
@@ -1174,7 +1174,7 @@
     if (ie8DomDefine) try {
       return $defineProperty(O, P, Attributes);
     } catch (error) { /* empty */ }
-    if ('get' in Attributes || 'set' in Attributes) throw TypeError$9('Accessors not supported');
+    if ('get' in Attributes || 'set' in Attributes) throw TypeError$a('Accessors not supported');
     if ('value' in Attributes) O[P] = Attributes.value;
     return O;
   };
@@ -1190,12 +1190,12 @@
     return object;
   };
 
-  var functionToString = functionUncurryThis(Function.toString);
+  var functionToString$1 = functionUncurryThis(Function.toString);
 
   // this helper broken in `core-js@3.4.1-3.4.4`, so we can't use `shared` helper
   if (!isCallable(sharedStore.inspectSource)) {
     sharedStore.inspectSource = function (it) {
-      return functionToString(it);
+      return functionToString$1(it);
     };
   }
 
@@ -1214,7 +1214,7 @@
   var hiddenKeys$1 = {};
 
   var OBJECT_ALREADY_INITIALIZED = 'Object already initialized';
-  var TypeError$8 = global_1.TypeError;
+  var TypeError$9 = global_1.TypeError;
   var WeakMap = global_1.WeakMap;
   var set$1, get, has;
 
@@ -1226,7 +1226,7 @@
     return function (it) {
       var state;
       if (!isObject(it) || (state = get(it)).type !== TYPE) {
-        throw TypeError$8('Incompatible receiver, ' + TYPE + ' required');
+        throw TypeError$9('Incompatible receiver, ' + TYPE + ' required');
       } return state;
     };
   };
@@ -1237,7 +1237,7 @@
     var wmhas = functionUncurryThis(store.has);
     var wmset = functionUncurryThis(store.set);
     set$1 = function (it, metadata) {
-      if (wmhas(store, it)) throw new TypeError$8(OBJECT_ALREADY_INITIALIZED);
+      if (wmhas(store, it)) throw new TypeError$9(OBJECT_ALREADY_INITIALIZED);
       metadata.facade = it;
       wmset(store, it, metadata);
       return metadata;
@@ -1252,7 +1252,7 @@
     var STATE = sharedKey('state');
     hiddenKeys$1[STATE] = true;
     set$1 = function (it, metadata) {
-      if (hasOwnProperty_1(it, STATE)) throw new TypeError$8(OBJECT_ALREADY_INITIALIZED);
+      if (hasOwnProperty_1(it, STATE)) throw new TypeError$9(OBJECT_ALREADY_INITIALIZED);
       metadata.facade = it;
       createNonEnumerableProperty(it, STATE, metadata);
       return metadata;
@@ -1273,14 +1273,14 @@
     getterFor: getterFor
   };
 
-  var FunctionPrototype$1 = Function.prototype;
+  var FunctionPrototype$2 = Function.prototype;
   // eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
   var getDescriptor = descriptors && Object.getOwnPropertyDescriptor;
 
-  var EXISTS = hasOwnProperty_1(FunctionPrototype$1, 'name');
+  var EXISTS = hasOwnProperty_1(FunctionPrototype$2, 'name');
   // additional protection from minified / mangled / dropped function names
   var PROPER = EXISTS && (function something() { /* empty */ }).name === 'something';
-  var CONFIGURABLE = EXISTS && (!descriptors || (descriptors && getDescriptor(FunctionPrototype$1, 'name').configurable));
+  var CONFIGURABLE = EXISTS && (!descriptors || (descriptors && getDescriptor(FunctionPrototype$2, 'name').configurable));
 
   var functionName = {
     EXISTS: EXISTS,
@@ -1753,6 +1753,27 @@
   _export({ target: 'Array', proto: true, forced: !HAS_SPECIES_SUPPORT }, {
     map: function map(callbackfn /* , thisArg */) {
       return $map(this, callbackfn, arguments.length > 1 ? arguments[1] : undefined);
+    }
+  });
+
+  var arrayMethodIsStrict = function (METHOD_NAME, argument) {
+    var method = [][METHOD_NAME];
+    return !!method && fails(function () {
+      // eslint-disable-next-line no-useless-call,no-throw-literal -- required for testing
+      method.call(null, argument || function () { throw 1; }, 1);
+    });
+  };
+
+  var un$Join = functionUncurryThis([].join);
+
+  var ES3_STRINGS = indexedObject != Object;
+  var STRICT_METHOD$1 = arrayMethodIsStrict('join', ',');
+
+  // `Array.prototype.join` method
+  // https://tc39.es/ecma262/#sec-array.prototype.join
+  _export({ target: 'Array', proto: true, forced: ES3_STRINGS || !STRICT_METHOD$1 }, {
+    join: function join(separator) {
+      return un$Join(toIndexedObject(this), separator === undefined ? ',' : separator);
     }
   });
 
@@ -16444,11 +16465,11 @@
   };
 
   var String$3 = global_1.String;
-  var TypeError$7 = global_1.TypeError;
+  var TypeError$8 = global_1.TypeError;
 
   var aPossiblePrototype = function (argument) {
     if (typeof argument == 'object' || isCallable(argument)) return argument;
-    throw TypeError$7("Can't set " + String$3(argument) + ' as a prototype');
+    throw TypeError$8("Can't set " + String$3(argument) + ' as a prototype');
   };
 
   /* eslint-disable no-proto -- safe */
@@ -16479,7 +16500,7 @@
     };
   }() : undefined);
 
-  var defineProperty = objectDefineProperty.f;
+  var defineProperty$1 = objectDefineProperty.f;
 
 
 
@@ -16488,7 +16509,7 @@
   var setToStringTag = function (target, TAG, STATIC) {
     if (target && !STATIC) target = target.prototype;
     if (target && !hasOwnProperty_1(target, TO_STRING_TAG)) {
-      defineProperty(target, TO_STRING_TAG, { configurable: true, value: TAG });
+      defineProperty$1(target, TO_STRING_TAG, { configurable: true, value: TAG });
     }
   };
 
@@ -16506,11 +16527,11 @@
     }
   };
 
-  var TypeError$6 = global_1.TypeError;
+  var TypeError$7 = global_1.TypeError;
 
   var anInstance = function (it, Prototype) {
     if (objectIsPrototypeOf(Prototype, it)) return it;
-    throw TypeError$6('Incorrect invocation');
+    throw TypeError$7('Incorrect invocation');
   };
 
   var iterators = {};
@@ -16531,12 +16552,12 @@
       || iterators[classof(it)];
   };
 
-  var TypeError$5 = global_1.TypeError;
+  var TypeError$6 = global_1.TypeError;
 
   var getIterator = function (argument, usingIterator) {
     var iteratorMethod = arguments.length < 2 ? getIteratorMethod(argument) : usingIterator;
     if (aCallable(iteratorMethod)) return anObject(functionCall(iteratorMethod, argument));
-    throw TypeError$5(tryToString(argument) + ' is not iterable');
+    throw TypeError$6(tryToString(argument) + ' is not iterable');
   };
 
   var iteratorClose = function (iterator, kind, value) {
@@ -16559,7 +16580,7 @@
     return value;
   };
 
-  var TypeError$4 = global_1.TypeError;
+  var TypeError$5 = global_1.TypeError;
 
   var Result = function (stopped, result) {
     this.stopped = stopped;
@@ -16592,7 +16613,7 @@
       iterator = iterable;
     } else {
       iterFn = getIteratorMethod(iterable);
-      if (!iterFn) throw TypeError$4(tryToString(iterable) + ' is not iterable');
+      if (!iterFn) throw TypeError$5(tryToString(iterable) + ' is not iterable');
       // optimisation for array iterators
       if (isArrayIteratorMethod(iterFn)) {
         for (index = 0, length = lengthOfArrayLike(iterable); length > index; index++) {
@@ -16651,12 +16672,12 @@
     return ITERATION_SUPPORT;
   };
 
-  var TypeError$3 = global_1.TypeError;
+  var TypeError$4 = global_1.TypeError;
 
   // `Assert: IsConstructor(argument) is true`
   var aConstructor = function (argument) {
     if (isConstructor(argument)) return argument;
-    throw TypeError$3(tryToString(argument) + ' is not a constructor');
+    throw TypeError$4(tryToString(argument) + ' is not a constructor');
   };
 
   var SPECIES$2 = wellKnownSymbol('species');
@@ -16669,10 +16690,10 @@
     return C === undefined || (S = anObject(C)[SPECIES$2]) == undefined ? defaultConstructor : aConstructor(S);
   };
 
-  var FunctionPrototype = Function.prototype;
-  var apply = FunctionPrototype.apply;
-  var bind$1 = FunctionPrototype.bind;
-  var call = FunctionPrototype.call;
+  var FunctionPrototype$1 = Function.prototype;
+  var apply = FunctionPrototype$1.apply;
+  var bind$1 = FunctionPrototype$1.bind;
+  var call = FunctionPrototype$1.call;
 
   // eslint-disable-next-line es/no-reflect -- safe
   var functionApply = typeof Reflect == 'object' && Reflect.apply || (bind$1 ? call.bind(apply) : function () {
@@ -16946,7 +16967,7 @@
   var NativePromisePrototype = nativePromiseConstructor && nativePromiseConstructor.prototype;
   var PromiseConstructor = nativePromiseConstructor;
   var PromisePrototype = NativePromisePrototype;
-  var TypeError$2 = global_1.TypeError;
+  var TypeError$3 = global_1.TypeError;
   var document$1 = global_1.document;
   var process = global_1.process;
   var newPromiseCapability = newPromiseCapability$1.f;
@@ -16965,7 +16986,7 @@
 
   var Internal, OwnPromiseCapability, PromiseWrapper, nativeThen;
 
-  var FORCED = isForced_1(PROMISE, function () {
+  var FORCED$1 = isForced_1(PROMISE, function () {
     var PROMISE_CONSTRUCTOR_SOURCE = inspectSource(PromiseConstructor);
     var GLOBAL_CORE_JS_PROMISE = PROMISE_CONSTRUCTOR_SOURCE !== String(PromiseConstructor);
     // V8 6.6 (Node 10 and Chrome 66) have a bug with resolving custom thenables
@@ -16989,7 +17010,7 @@
     return !GLOBAL_CORE_JS_PROMISE && engineIsBrowser && !NATIVE_REJECTION_EVENT;
   });
 
-  var INCORRECT_ITERATION = FORCED || !checkCorrectnessOfIteration(function (iterable) {
+  var INCORRECT_ITERATION = FORCED$1 || !checkCorrectnessOfIteration(function (iterable) {
     PromiseConstructor.all(iterable)['catch'](function () { /* empty */ });
   });
 
@@ -17031,7 +17052,7 @@
               }
             }
             if (result === reaction.promise) {
-              reject(TypeError$2('Promise-chain cycle'));
+              reject(TypeError$3('Promise-chain cycle'));
             } else if (then = isThenable(result)) {
               functionCall(then, result, resolve, reject);
             } else resolve(result);
@@ -17112,7 +17133,7 @@
     state.done = true;
     if (unwrap) state = unwrap;
     try {
-      if (state.facade === value) throw TypeError$2("Promise can't be resolved itself");
+      if (state.facade === value) throw TypeError$3("Promise can't be resolved itself");
       var then = isThenable(value);
       if (then) {
         microtask(function () {
@@ -17137,7 +17158,7 @@
   };
 
   // constructor polyfill
-  if (FORCED) {
+  if (FORCED$1) {
     // 25.4.3.1 Promise(executor)
     PromiseConstructor = function Promise(executor) {
       anInstance(this, PromisePrototype);
@@ -17227,7 +17248,7 @@
     }
   }
 
-  _export({ global: true, wrap: true, forced: FORCED }, {
+  _export({ global: true, wrap: true, forced: FORCED$1 }, {
     Promise: PromiseConstructor
   });
 
@@ -17237,7 +17258,7 @@
   PromiseWrapper = getBuiltIn(PROMISE);
 
   // statics
-  _export({ target: PROMISE, stat: true, forced: FORCED }, {
+  _export({ target: PROMISE, stat: true, forced: FORCED$1 }, {
     // `Promise.reject` method
     // https://tc39.es/ecma262/#sec-promise.reject
     reject: function reject(r) {
@@ -17247,7 +17268,7 @@
     }
   });
 
-  _export({ target: PROMISE, stat: true, forced: FORCED }, {
+  _export({ target: PROMISE, stat: true, forced: FORCED$1 }, {
     // `Promise.resolve` method
     // https://tc39.es/ecma262/#sec-promise.resolve
     resolve: function resolve(x) {
@@ -17344,14 +17365,6 @@
   var DOMTokenListPrototype = classList && classList.constructor && classList.constructor.prototype;
 
   var domTokenListPrototype = DOMTokenListPrototype === Object.prototype ? undefined : DOMTokenListPrototype;
-
-  var arrayMethodIsStrict = function (METHOD_NAME, argument) {
-    var method = [][METHOD_NAME];
-    return !!method && fails(function () {
-      // eslint-disable-next-line no-useless-call,no-throw-literal -- required for testing
-      method.call(null, argument || function () { throw 1; }, 1);
-    });
-  };
 
   var $forEach = arrayIteration.forEach;
 
@@ -17827,7 +17840,7 @@
     return result;
   };
 
-  var TypeError$1 = global_1.TypeError;
+  var TypeError$2 = global_1.TypeError;
 
   // `RegExpExec` abstract operation
   // https://tc39.es/ecma262/#sec-regexpexec
@@ -17839,7 +17852,7 @@
       return result;
     }
     if (classofRaw(R) === 'RegExp') return functionCall(regexpExec, R, S);
-    throw TypeError$1('RegExp#exec called on incompatible receiver');
+    throw TypeError$2('RegExp#exec called on incompatible receiver');
   };
 
   var UNSUPPORTED_Y = regexpStickyHelpers.UNSUPPORTED_Y;
@@ -20133,8 +20146,578 @@
     }
   });
 
+  var IS_CONCAT_SPREADABLE = wellKnownSymbol('isConcatSpreadable');
+  var MAX_SAFE_INTEGER = 0x1FFFFFFFFFFFFF;
+  var MAXIMUM_ALLOWED_INDEX_EXCEEDED = 'Maximum allowed index exceeded';
+  var TypeError$1 = global_1.TypeError;
+
+  // We can't use this feature detection in V8 since it causes
+  // deoptimization and serious performance degradation
+  // https://github.com/zloirock/core-js/issues/679
+  var IS_CONCAT_SPREADABLE_SUPPORT = engineV8Version >= 51 || !fails(function () {
+    var array = [];
+    array[IS_CONCAT_SPREADABLE] = false;
+    return array.concat()[0] !== array;
+  });
+
+  var SPECIES_SUPPORT = arrayMethodHasSpeciesSupport('concat');
+
+  var isConcatSpreadable = function (O) {
+    if (!isObject(O)) return false;
+    var spreadable = O[IS_CONCAT_SPREADABLE];
+    return spreadable !== undefined ? !!spreadable : isArray(O);
+  };
+
+  var FORCED = !IS_CONCAT_SPREADABLE_SUPPORT || !SPECIES_SUPPORT;
+
+  // `Array.prototype.concat` method
+  // https://tc39.es/ecma262/#sec-array.prototype.concat
+  // with adding support of @@isConcatSpreadable and @@species
+  _export({ target: 'Array', proto: true, forced: FORCED }, {
+    // eslint-disable-next-line no-unused-vars -- required for `.length`
+    concat: function concat(arg) {
+      var O = toObject(this);
+      var A = arraySpeciesCreate(O, 0);
+      var n = 0;
+      var i, k, length, len, E;
+      for (i = -1, length = arguments.length; i < length; i++) {
+        E = i === -1 ? O : arguments[i];
+        if (isConcatSpreadable(E)) {
+          len = lengthOfArrayLike(E);
+          if (n + len > MAX_SAFE_INTEGER) throw TypeError$1(MAXIMUM_ALLOWED_INDEX_EXCEEDED);
+          for (k = 0; k < len; k++, n++) if (k in E) createProperty(A, n, E[k]);
+        } else {
+          if (n >= MAX_SAFE_INTEGER) throw TypeError$1(MAXIMUM_ALLOWED_INDEX_EXCEEDED);
+          createProperty(A, n++, E);
+        }
+      }
+      A.length = n;
+      return A;
+    }
+  });
+
+  var FUNCTION_NAME_EXISTS = functionName.EXISTS;
+
+  var defineProperty = objectDefineProperty.f;
+
+  var FunctionPrototype = Function.prototype;
+  var functionToString = functionUncurryThis(FunctionPrototype.toString);
+  var nameRE = /function\b(?:\s|\/\*[\S\s]*?\*\/|\/\/[^\n\r]*[\n\r]+)*([^\s(/]*)/;
+  var regExpExec = functionUncurryThis(nameRE.exec);
+  var NAME = 'name';
+
+  // Function instances `.name` property
+  // https://tc39.es/ecma262/#sec-function-instances-name
+  if (descriptors && !FUNCTION_NAME_EXISTS) {
+    defineProperty(FunctionPrototype, NAME, {
+      configurable: true,
+      get: function () {
+        try {
+          return regExpExec(nameRE, functionToString(this))[1];
+        } catch (error) {
+          return '';
+        }
+      }
+    });
+  }
+
+  var cadastreLayers = [{
+    id: 1,
+    title: 'Участок',
+    reg: /^\d\d:\d+:\d+:\d+$/
+  }, {
+    id: 2,
+    title: 'Квартал',
+    reg: /^\d\d:\d+:\d+$/
+  }, {
+    id: 3,
+    title: 'Район',
+    reg: /^\d\d:\d+$/
+  }, {
+    id: 4,
+    title: 'Округ',
+    reg: /^\d\d$/
+  }, {
+    id: 5,
+    title: 'ОКС',
+    reg: /^\d\d:\d+:\d+:\d+:\d+$/
+  }, {
+    id: 6,
+    title: 'Тер.зоны',
+    reg: /^\w+$/
+  }, {
+    id: 7,
+    title: 'Границы',
+    reg: /^\w+$/
+  }, {
+    id: 9,
+    title: 'ГОК',
+    reg: /^\w+$/
+  }, {
+    id: 10,
+    title: 'ЗОУИТ',
+    reg: /^\d+\.\d+\.\d+/
+  }, {
+    id: 12,
+    title: 'Лес',
+    reg: /^\w+$/
+  }, {
+    id: 13,
+    title: 'Красные линии',
+    reg: /^\w+$/
+  }, {
+    id: 15,
+    title: 'СРЗУ',
+    reg: /^\w+$/
+  }, {
+    id: 16,
+    title: 'ОЭЗ',
+    reg: /^\w+$/
+  } // /[^\d\:]/g,
+  // /\d\d:\d+$/,
+  // /\d\d:\d+:\d+$/,
+  // /\d\d:\d+:\d+:\d+$/
+  ];
+
+  var getCadastreLayer = function getCadastreLayer(str, type) {
+    // str = str.trim();
+    for (var i = 0, len = cadastreLayers.length; i < len; i++) {
+      var it = cadastreLayers[i];
+
+      if (it.id === type) {
+        return it;
+      } // if (it.reg.exec(str)) { return it; }
+
+    }
+
+    return null;
+  };
+
+  var states = {
+    '01': 'Ранее учтенный',
+    '03': 'Условный',
+    '04': 'Внесенный',
+    '05': 'Временный (Удостоверен)',
+    '06': 'Учтенный',
+    '07': 'Снят с учета',
+    '08': 'Аннулированный'
+  };
+  var category_types = {
+    '003001000000': 'Земли сельскохозяйственного назначения',
+    '003002000000': 'Земли поселений (земли населенных пунктов)',
+    '003003000000': 'Земли промышленности, энергетики, транспорта, связи, радиовещания, телевидения, информатики, земли для обеспечения космической деятельности, земли обороны, безопасности и земли иного специального назначения',
+    '003004000000': 'Земли особо охраняемых территорий и объектов',
+    '003005000000': 'Земли лесного фонда',
+    '003006000000': 'Земли водного фонда',
+    '003007000000': 'Земли запаса',
+    '003008000000': 'Категория не установлена'
+  };
+
+  var getCategoryType = function getCategoryType(id) {
+    return category_types[id] || '';
+  };
+
+  var parcelOwnership = {
+    '200': 'Собственность публично-правовых образований',
+    '100': 'Частная собственность'
+  };
+
+  var getOwnership = function getOwnership(id) {
+    return parcelOwnership[id] || '';
+  };
+
+  var utilizations = {
+    '141000000000': 'Для размещения объектов сельскохозяйственного назначения и сельскохозяйственных угодий',
+    '141001000000': 'Для сельскохозяйственного производства',
+    '141001010000': 'Для использования в качестве сельскохозяйственных угодий',
+    '141001020000': 'Для размещения зданий, строений, сооружений, используемых для производства, хранения и первичной переработки сельскохозяйственной продукции',
+    '141001030000': 'Для размещения внутрихозяйственных дорог и коммуникаций',
+    '141001040000': 'Для размещения водных объектов',
+    '141002000000': 'Для ведения крестьянского (фермерского) хозяйства',
+    '141003000000': 'Для ведения личного подсобного хозяйства',
+    '141004000000': 'Для ведения гражданами садоводства и огородничества',
+    '141005000000': 'Для ведения гражданами животноводства',
+    '141006000000': 'Для дачного строительства',
+    '141007000000': 'Для размещения древесно-кустарниковой растительности, предназначенной для защиты земель от воздействия негативных (вредных) природных, антропогенных и техногенных явлений',
+    '141008000000': 'Для научно-исследовательских целей',
+    '141009000000': 'Для учебных целей',
+    '141010000000': 'Для сенокошения и выпаса скота гражданами',
+    '141011000000': 'Фонд перераспределения',
+    '141012000000': 'Для размещения объектов охотничьего хозяйства',
+    '141013000000': 'Для размещения объектов рыбного хозяйства',
+    '141014000000': 'Для иных видов сельскохозяйственного использования',
+    '142000000000': 'Для размещения объектов, характерных для населенных пунктов',
+    '142001000000': 'Для объектов жилой застройки',
+    '142001010000': 'Для индивидуальной жилой застройки',
+    '142001020000': 'Для многоквартирной застройки',
+    '142001020100': 'Для малоэтажной застройки',
+    '142001020200': 'Для среднеэтажной застройки',
+    '142001020300': 'Для многоэтажной застройки',
+    '142001020400': 'Для иных видов жилой застройки',
+    '142001030000': 'Для размещения объектов дошкольного, начального, общего и среднего (полного) общего образования',
+    '142001040000': 'Для размещения иных объектов, допустимых в жилых зонах и не перечисленных в классификаторе',
+    '142002000000': 'Для объектов общественно-делового значения',
+    '142002010000': 'Для размещения объектов социального и коммунально-бытового назначения',
+    '142002020000': 'Для размещения объектов здравоохранения',
+    '142002030000': 'Для размещения объектов культуры',
+    '142002040000': 'Для размещения объектов торговли',
+    '142002040100': 'Для размещения объектов розничной торговли',
+    '142002040200': 'Для размещения объектов оптовой торговли',
+    '142002050000': 'Для размещения объектов общественного питания',
+    '142002060000': 'Для размещения объектов предпринимательской деятельности',
+    '142002070000': 'Для размещения объектов среднего профессионального и высшего профессионального образования',
+    '142002080000': 'Для размещения административных зданий',
+    '142002090000': 'Для размещения научно-исследовательских учреждений',
+    '142002100000': 'Для размещения культовых зданий',
+    '142002110000': 'Для стоянок автомобильного транспорта',
+    '142002120000': 'Для размещения объектов делового назначения, в том числе офисных центров',
+    '142002130000': 'Для размещения объектов финансового назначения',
+    '142002140000': 'Для размещения гостиниц',
+    '142002150000': 'Для размещения подземных или многоэтажных гаражей',
+    '142002160000': 'Для размещения индивидуальных гаражей',
+    '142002170000': 'Для размещения иных объектов общественно-делового значения, обеспечивающих жизнь граждан',
+    '142003000000': 'Для общего пользования (уличная сеть)',
+    '142004000000': 'Для размещения объектов специального назначения',
+    '142004010000': 'Для размещения кладбищ',
+    '142004020000': 'Для размещения крематориев',
+    '142004030000': 'Для размещения скотомогильников',
+    '142004040000': 'Под объектами размещения отходов потребления',
+    '142004050000': 'Под иными объектами специального назначения',
+    '142005000000': 'Для размещения коммунальных, складских объектов',
+    '142006000000': 'Для размещения объектов жилищно-коммунального хозяйства',
+    '142007000000': 'Для иных видов использования, характерных для населенных пунктов',
+    '143000000000': 'Для размещения объектов промышленности, энергетики, транспорта, связи, радиовещания, телевидения, информатики, обеспечения космической деятельности, обороны, безопасности и иного специального назначения',
+    '143001000000': 'Для размещения промышленных объектов',
+    '143001010000': 'Для размещения производственных и административных зданий, строений, сооружений и обслуживающих их объектов',
+    '143001010100': 'Для размещения производственных зданий',
+    '143001010200': 'Для размещения коммуникаций',
+    '143001010300': 'Для размещения подъездных путей',
+    '143001010400': 'Для размещения складских помещений',
+    '143001010500': 'Для размещения административных зданий',
+    '143001010600': 'Для размещения культурно-бытовых зданий',
+    '143001010700': 'Для размещения иных сооружений промышленности',
+    '143001020000': 'Для добычи и разработки полезных ископаемых',
+    '143001030000': 'Для размещения иных объектов промышленности',
+    '143002000000': 'Для размещения объектов энергетики',
+    '143002010000': 'Для размещения электростанций и обслуживающих сооружений и объектов',
+    '143002010100': 'Для размещения гидроэлектростанций',
+    '143002010200': 'Для размещения атомных станций',
+    '143002010300': 'Для размещения ядерных установок',
+    '143002010400': 'Для размещения пунктов хранения ядерных материалов и радиоактивных веществ энергетики',
+    '143002010500': 'Для размещения хранилищ радиоактивных отходов',
+    '143002010600': 'Для размещения тепловых станций',
+    '143002010700': 'Для размещения иных типов электростанций',
+    '143002010800': 'Для размещения иных обслуживающих сооружений и объектов',
+    '143002020000': 'Для размещения объектов электросетевого хозяйства',
+    '143002020100': 'Для размещения воздушных линий электропередачи',
+    '143002020200': 'Для размещения наземных сооружений кабельных линий электропередачи',
+    '143002020300': 'Для размещения подстанций',
+    '143002020400': 'Для размещения распределительных пунктов',
+    '143002020500': 'Для размещения других сооружений и объектов электросетевого хозяйства',
+    '143002030000': 'Для размещения иных объектов энергетики',
+    '143003000000': 'Для размещения объектов транспорта',
+    '143003010000': 'Для размещения и эксплуатации объектов железнодорожного транспорта',
+    '143003010100': 'Для размещения железнодорожных путей и их конструктивных элементов',
+    '143003010200': 'Для размещения полос отвода железнодорожных путей',
+    '143003010300': 'Для размещения, эксплуатации, расширения и реконструкции строений, зданий, сооружений, в том числе железнодорожных вокзалов, железнодорожных станций, а также устройств и других объектов, необходимых для эксплуатации, содержания, строительства, реконструкции, ремонта, развития наземных и подземных зданий, строений, сооружений, устройств и других объектов железнодорожного транспорта',
+    '143003010301': 'Для размещения железнодорожных вокзалов',
+    '143003010302': 'Для размещения железнодорожных станций',
+    '143003010303': 'Для размещения устройств и других объектов, необходимых для эксплуатации, содержания, строительства, реконструкции, ремонта, развития наземных и подземных зданий, строений, сооружений, устройств и других объектов железнодорожного транспорта',
+    '143003020000': 'Для размещения и эксплуатации объектов автомобильного транспорта и объектов дорожного хозяйства',
+    '143003020100': 'Для размещения автомобильных дорог и их конструктивных элементов',
+    '143003020200': 'Для размещения полос отвода',
+    '143003020300': 'Для размещения объектов дорожного сервиса в полосах отвода автомобильных дорог',
+    '143003020400': 'Для размещения дорожных сооружений',
+    '143003020500': 'Для размещения автовокзалов и автостанций',
+    '143003020600': 'Для размещения иных объектов автомобильного транспорта и дорожного хозяйства',
+    '143003030000': 'Для размещения и эксплуатации объектов морского, внутреннего водного транспорта',
+    '143003030100': 'Для размещения искусственно созданных внутренних водных путей',
+    '143003030200': 'Для размещения морских и речных портов, причалов, пристаней',
+    '143003030300': 'Для размещения иных объектов морского, внутреннего водного транспорта',
+    '143003030400': 'Для выделения береговой полосы',
+    '143003040000': 'Для размещения и эксплуатации объектов воздушного транспорта',
+    '143003040100': 'Для размещения аэропортов и аэродромов',
+    '143003040200': 'Для размещения аэровокзалов',
+    '143003040300': 'Для размещения взлетно-посадочных полос',
+    '143003040400': 'Для размещения иных наземных объектов воздушного транспорта',
+    '143003050000': 'Для размещения и эксплуатации объектов трубопроводного транспорта',
+    '143003050100': 'Для размещения нефтепроводов',
+    '143003050200': 'Для размещения газопроводов',
+    '143003050300': 'Для размещения иных трубопроводов',
+    '143003050400': 'Для размещения иных объектов трубопроводного транспорта',
+    '143003060000': 'Для размещения и эксплуатации иных объектов транспорта',
+    '143004000000': 'Для размещения объектов связи, радиовещания, телевидения, информатики',
+    '143004010000': 'Для размещения эксплуатационных предприятий связи и обслуживания линий связи',
+    '143004020000': 'Для размещения кабельных, радиорелейных и воздушных линий связи и линий радиофикации на трассах кабельных и воздушных линий связи и радиофикации и их охранные зоны',
+    '143004030000': 'Для размещения подземных кабельных и воздушных линий связи и радиофикации и их охранные зоны',
+    '143004040000': 'Для размещения наземных и подземных необслуживаемых усилительных пунктов на кабельных линиях связи и их охранные зоны',
+    '143004050000': 'Для размещения наземных сооружений и инфраструктур спутниковой связи',
+    '143004060000': 'Для размещения иных объектов связи, радиовещания, телевидения, информатики',
+    '143005000000': 'Для размещения объектов, предназначенных для обеспечения космической деятельности',
+    '143005010000': 'Для размещения космодромов, стартовых комплексов и пусковых установок',
+    '143005020000': 'Для размещения командно-измерительных комплексов, центров и пунктов управления полетами космических объектов, приема, хранения и переработки информации',
+    '143005030000': 'Для размещения баз хранения космической техники',
+    '143005040000': 'Для размещения полигонов приземления космических объектов и взлетно-посадочных полос',
+    '143005050000': 'Для размещения объектов экспериментальной базы для отработки космической техники',
+    '143005060000': 'Для размещения центров и оборудования для подготовки космонавтов',
+    '143005070000': 'Для размещения других наземных сооружений и техники, используемых при осуществлении космической деятельности',
+    '143006000000': 'Для размещения объектов, предназначенных для обеспечения обороны и безопасности',
+    '143006010000': 'Для обеспечения задач обороны',
+    '143006010100': 'Для размещения военных организаций, учреждений и других объектов',
+    '143006010200': 'Для дислокации войск и сил флота',
+    '143006010300': 'Для проведения учений и иных мероприятий',
+    '143006010400': 'Для испытательных полигонов',
+    '143006010500': 'Для мест уничтожения оружия и захоронения отходов',
+    '143006010600': 'Для создания запасов материальных ценностей в государственном и мобилизационном резервах (хранилища, склады и другие)',
+    '143006010700': 'Для размещения иных объектов обороны',
+    '143006020000': 'Для размещения объектов (территорий), обеспечивающих защиту и охрану Государственной границы Российской Федерации',
+    '143006020100': 'Для обустройства и содержания инженерно-технических сооружений и заграждений',
+    '143006020200': 'Для обустройства и содержания пограничных знаков',
+    '143006020300': 'Для обустройства и содержания пограничных просек',
+    '143006020400': 'Для обустройства и содержания коммуникаций',
+    '143006020500': 'Для обустройства и содержания пунктов пропуска через Государственную границу Российской Федерации',
+    '143006020600': 'Для размещения иных объектов для защиты и охраны Государственной границы Российской Федерации',
+    '143006030000': 'Для размещения иных объектов обороны и безопасности',
+    '143007000000': 'Для размещения иных объектов промышленности, энергетики, транспорта, связи, радиовещания, телевидения, информатики, обеспечения космической деятельности, обороны, безопасности и иного специального назначения',
+    '144000000000': 'Для размещения особо охраняемых историко-культурных и природных объектов (территорий)',
+    '144001000000': 'Для размещения особо охраняемых природных объектов (территорий)',
+    '144001010000': 'Для размещения государственных природных заповедников (в том числе биосферных)',
+    '144001020000': 'Для размещения государственных природных заказников',
+    '144001030000': 'Для размещения национальных парков',
+    '144001040000': 'Для размещения природных парков',
+    '144001050000': 'Для размещения дендрологических парков',
+    '144001060000': 'Для размещения ботанических садов',
+    '144001070000': 'Для размещения объектов санаторного и курортного назначения',
+    '144001080000': 'Территории месторождений минеральных вод, лечебных грязей, рапы лиманов и озер',
+    '144001090000': 'Для традиционного природопользования',
+    '144001100000': 'Для размещения иных особо охраняемых природных территорий (объектов)',
+    '144002000000': 'Для размещения объектов (территорий) природоохранного назначения',
+    '144003000000': 'Для размещения объектов (территорий) рекреационного назначения',
+    '144003010000': 'Для размещения домов отдыха, пансионатов, кемпингов',
+    '144003020000': 'Для размещения объектов физической культуры и спорта',
+    '144003030000': 'Для размещения туристических баз, стационарных и палаточных туристско-оздоровительных лагерей, домов рыболова и охотника, детских туристических станций',
+    '144003040000': 'Для размещения туристических парков',
+    '144003050000': 'Для размещения лесопарков',
+    '144003060000': 'Для размещения учебно-туристических троп и трасс',
+    '144003070000': 'Для размещения детских и спортивных лагерей',
+    '144003080000': 'Для размещения скверов, парков, городских садов',
+    '144003090000': 'Для размещения пляжей',
+    '144003100000': 'Для размещения иных объектов (территорий) рекреационного назначения',
+    '144004000000': 'Для размещения объектов историко-культурного назначения',
+    '144004010000': 'Для размещения объектов культурного наследия народов Российской Федерации (памятников истории и культуры), в том числе объектов археологического наследия',
+    '144004020000': 'Для размещения военных и гражданских захоронений',
+    '144005000000': 'Для размещения иных особо охраняемых историко-культурных и природных объектов (территорий)',
+    '145000000000': 'Для размещения объектов лесного фонда',
+    '145001000000': 'Для размещения лесной растительности',
+    '145002000000': 'Для восстановления лесной растительности',
+    '145003000000': 'Для прочих объектов лесного хозяйства',
+    '146000000000': 'Для размещения объектов водного фонда',
+    '146001000000': 'Под водными объектами',
+    '146002000000': 'Для размещения гидротехнических сооружений',
+    '146003000000': 'Для размещения иных сооружений, расположенных на водных объектах',
+    '147000000000': 'Земли запаса (неиспользуемые)',
+    '014001000000': 'Земли жилой застройки',
+    '014001001000': 'Земли под жилыми домами многоэтажной и повышенной этажности застройки',
+    '014001002000': 'Земли под домами индивидуальной жилой застройкой',
+    '014001003000': 'Незанятые земли, отведенные под жилую застройку',
+    '014002000000': 'Земли общественно-деловой застройки',
+    '014002001000': 'Земли гаражей и автостоянок',
+    '014002002000': 'Земли под объектами торговли, общественного питания, бытового обслуживания, автозаправочными и газонаполнительными станциями, предприятиями автосервиса',
+    '014002003000': 'Земли учреждений и организаций народного образования, земли под объектами здравоохранения и социального обеспечения физической культуры и спорта, культуры и искусства, религиозными объектами',
+    '014002004000': 'Земли под административно-управлен-ческими и общественными объектами, земли предприятий, организаций, учреждений финансирования, кредитования, страхования и пенсионного обеспечения',
+    '014002005000': 'Земли под зданиями (строениями) рекреации',
+    '014003000000': 'Земли под объектами промышленности',
+    '014004000000': 'Земли общего пользования (геонимы в поселениях)',
+    '014005000000': 'Земли под объектами транспорта, связи, инженерных коммуникаций',
+    '014005001000': 'Под объектами железнодорожного транспорта',
+    '014005002000': 'Под объектами автомобильного транспорта',
+    '014005003000': 'Под объектами морского, внутреннего водного транспорта',
+    '014005004000': 'Под объектами воздушного транспорта',
+    '014005005000': 'Под объектами иного транспорта, связи, инженерных коммуникаций',
+    '014006000000': 'Земли сельскохозяйственного использования',
+    '014006001000': 'Земли под крестьянскими (фермерскими) хозяйствами',
+    '014006002000': 'Земли под предприятиями, занимающимися сельскохозяйственным производством',
+    '014006003000': 'Земли под садоводческими объединениями и индивидуальными садоводами',
+    '014006004000': 'Земли под огородническими объединениями и индивидуальными огородниками',
+    '014006005000': 'Земли под дачными объединениями',
+    '014006006000': 'Земли под личными подсобными хозяйствами',
+    '014006007000': 'Земли под служебными наделами',
+    '014006008000': 'Земли оленьих пастбищ',
+    '014006009000': 'Для других сельскохозяйственных целей',
+    '014007000000': 'Земли под лесами в поселениях (в том числе городскими лесами), под древесно-кустарниковой растительностью, не входящей в лесной фонд (в том числе лесопарками, парками, скверами, бульварами)',
+    '014008000000': 'Земли, занятые водными объектами, земли водоохранных зон водных объектов, а также земли, выделяемые для установления полос отвода и зон охраны водозаборов, гидротехнических сооружений и иных водохозяйственных сооружений, объектов.',
+    '014009000000': 'Земли под военными и иными режимными объектами',
+    '014010000000': 'Земли под объектами иного специального назначения',
+    '014011000000': 'Земли, не вовлеченные в градостроительную или иную деятельность (земли – резерв)',
+    '014012000000': 'Неопределено',
+    '014013000000': 'Значение отсутствует'
+  };
+
+  var getUtilization = function getUtilization(id) {
+    return utilizations[id] || '';
+  };
+
+  var cadNav = function cadNav(nm, features, id, name) {
+    // const it = features[nm];
+    // const id = it.attrs.id;
+    var len = features.length;
+    var title = name + ' (' + (nm + 1) + '/' + len + ')<br>' + id; // console.log('cadNav', it);
+    // <img data-v-10b2f008="" src="https://pkk.rosreestr.ru/arcgis/rest/services/PKK6/CadastreOriginal/MapServer/export?dpi=96&amp;f=image&amp;format=png8&amp;size=1024,768&amp;bboxSR=102100&amp;imageSR=102100&amp;transparent=true&amp;bbox=4177598.480724305,7479005.947084627,4177882.924905997,7479221.685299324&amp;layerDefs=%7B%220%22:%22ID%20IN%20('77:6:9003:8026')%22,%222%22:%22ID%20IN%20('')%22%7D&amp;layers=show:0,2" class="infowindow-image" style="margin-top: 37px;">
+    // <img data-v-10b2f008="" src="https://pkk.rosreestr.ru/arcgis/rest/services/PKK6/CadastreOriginal/MapServer/export?dpi=96&amp;f=image&amp;format=png8&amp;size=1024,768&amp;bboxSR=102100&amp;imageSR=102100&amp;transparent=true&amp;bbox=4176594.563002256,7478733.739024954,4178419.7729902538,7480814.232703805&amp;layerDefs=%7B%220%22:%22KVARTAL_ID%20=%20'77:6:9003'%20AND%20NOT%20ID%20=%20'1'%22,%222%22:%22KVARTAL_ID%20=%20'77:6:9003'%20AND%20NOT%20ID%20=%20'77:6:9003:8026'%22,%224%22:%22ID%20IN%20('77:6:9003')%22,%221%22:%22ID%20IN%20('77:6:9003:8026')%22%7D&amp;layers=show:1,0,2,4" class="infowindow-image" style="margin-top: 37px;">
+    // https://pkk.rosreestr.ru/#/search/55.59756057529083,37.526718293804/17/@5w3tqxnc7?text=77%3A6%3A9011%3A1003&type=1&nameTab&indexTab&opened=77%3A6%3A9011%3A1003
+    // https://pkk.rosreestr.ru/#/search/55.59756057529083,37.526718293804/17/@5w3tqxnc7?text=77%3A6%3A9011%3A1003&type=1&nameTab&indexTab&opened=77%3A6%3A9011%3A1003
+    // https://pkk.rosreestr.ru/#/search/55.59958494444303,37.529283264270816/18/@5w3tqxnc7?text=77%3A6%3A9003%3A8026&type=1&nameTab&indexTab&opened=77%3A6%3A9003%3A8026
+    // <div class="plans"><a href="https://pkk5.kosmosnimki.ru/plan.html?id=40:20:100512:10&amp;type=1" target="_blank">План ЗУ</a> <a href="https://pkk5.kosmosnimki.ru/plan.html?id=40:20:100512:10&amp;parent=40:20:100512&amp;type=2" target="_blank">План КК</a>
+    // </div>
+    // <span class="cadCount">УЧАСТОК (1/4)<br>40:20:100512:10
+    // let lStyle = nm ? '' : ' style="visibility: hidden;"';
+    // let rStyle = nm < features.length -1 ? '' : ' style="visibility: hidden;"';
+
+    return "<div class=\"cadNav\">\n\t\t\t\t<span class=\"cadLeft\"".concat(nm ? '' : ' style="visibility: hidden;"', ">&lt;</span>\n\t\t\t\t<span class=\"cadCount\">").concat(title, "</span>\n\t\t\t\t<span class=\"cadRight\"").concat(nm < features.length - 1 ? '' : ' style="visibility: hidden;"', ">&gt;</span>\n\t\t\t</div>");
+  };
+
+  var featureCont = function featureCont(feature, title) {
+    var attrs = feature.attrs;
+    var address = attrs.address || attrs.desc || '';
+    var trs = [];
+    trs.push('<tr><td class="first">Тип:</td><td>' + title + '</td></tr>');
+
+    if (attrs.cn) {
+      trs.push('<tr><td class="first">Кад.номер:</td><td>' + attrs.cn + '</td></tr>');
+    } // plans += '<a href="' + proxy +  'plan.html?id=' + attrs.id + '&type=1" target="_blank">План ЗУ</a>' ;
+
+
+    if (attrs.kvartal) {
+      trs.push('<tr><td class="first">Кад.квартал:</td><td>' + attrs.kvartal_cn + '</td></tr>'); // plans += ' <a href="' + proxy + 'plan.html?id=' + attrs.id + '&parent=' + attrs.kvartal + '&type=2" target="_blank">План КК</a>';
+    }
+
+    if (attrs.statecd) {
+      trs.push('<tr><td class="first">Статус:</td><td>' + states[attrs.statecd] + '</td></tr>');
+    }
+
+    if (attrs.name) {
+      trs.push('<tr><td class="first">Наименование:</td><td>' + attrs.name + '</td></tr>');
+    }
+
+    if (attrs.cad_cost) {
+      trs.push('<tr><td class="first">Кадастровая стоимость:</td><td>' + attrs.cad_cost + '</td></tr>');
+    }
+
+    if (attrs.area_value) {
+      trs.push('<tr><td class="first">Общая площадь:</td><td>' + attrs.area_value + '</td></tr>');
+    }
+
+    if (address) {
+      trs.push('<tr><td class="first">Адрес:</td><td>' + address + '</td></tr>');
+    }
+
+    if (attrs.category_type) {
+      trs.push('<tr><td class="first">Категория земель:</td><td>' + getCategoryType(attrs.category_type) + '</td></tr>');
+    }
+
+    if (attrs.fp) {
+      trs.push('<tr><td class="first">Форма собственности:</td><td>' + getOwnership(attrs.fp) + '</td></tr>');
+    }
+
+    if (attrs.util_code) {
+      trs.push('<tr><td class="first">Разрешенное использование:</td><td>' + getUtilization(attrs.util_code) + '</td></tr>');
+    }
+
+    if (attrs.util_by_doc) {
+      trs.push('<tr><td class="first">по документу:</td><td>' + attrs.util_by_doc + '</td></tr>');
+    }
+
+    if (attrs.cad_record_date) {
+      trs.push('<tr><td class="first">Дата изменения сведений в ГКН:</td><td>' + attrs.cad_record_date + '</td></tr>');
+    }
+
+    return trs.join('\n');
+  };
+
+  var Utils = {
+    getContent: function getContent(feature, nm, features) {
+      // let res = L.DomUtil.create('div', 'cadInfo');
+      var it = features[nm];
+      var id = it.attrs.id;
+      var cLayer = getCadastreLayer(id, it.type);
+      return "\n\t\t\t<div class=\"cadItem\">\n\t\t\t\t".concat(cadNav(nm, features, id, cLayer.title), "\n\t\t\t\t<div class=\"featureCont\">\n\t\t\t\t\t<table class=\"table\"><tbody>\n\t\t\t\t\t").concat(featureCont(feature, cLayer.title), "\n\t\t\t\t\t</tbody>\n\t\t\t\t\t</table>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"operCont\">\n\t\t\t\t\t<button class=\"ShowObject\">\u0412\u044B\u0434\u0435\u043B\u0438\u0442\u044C \u0433\u0440\u0430\u043D\u0438\u0446\u0443</button>\n\t\t\t\t\t<button class=\"exportIcon notVisible\"></button>\n\t\t\t\t\t<!-- a class=\"button exportIcon notVisible\" target=\"_blank\" href=\"\" title=\"\u042D\u043A\u0441\u043F\u043E\u0440\u0442 \u0432 GeoJSON\">\n\t\t\t\t\t\t<svg role=\"img\" class=\"svgIcon\">\n\t\t\t\t\t\t<use xmlns:xlink=\"http://www.w3.org/1999/xlink\" xlink:href=\"#download\"></use>\n\t\t\t\t\t\t</svg>\n\t\t\t\t\t</a -->\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t");
+    }
+  };
+
+  var popup;
+  var currNum = 0;
+
+  var setNum = function setNum(delta, features) {
+    var nextNum = currNum + delta;
+    var it = features[nextNum];
+
+    if (it) {
+      currNum = nextNum;
+
+      popup._getFeature(it.attrs.id, it.type, currNum);
+    }
+  };
+
+  var setEvents = function setEvents(pNode, features) {
+    var exportIcon = pNode.getElementsByClassName('exportIcon')[0];
+    var cadRight = pNode.getElementsByClassName('cadRight')[0];
+
+    if (cadRight) {
+      leafletSrc.DomEvent.on(cadRight, 'click', function () {
+        setNum(1, features);
+
+        if (exportIcon) {
+          leafletSrc.DomUtil.addClass(exportIcon, 'notVisible');
+        }
+      });
+    }
+
+    var cadLeft = pNode.getElementsByClassName('cadLeft')[0];
+
+    if (cadLeft) {
+      leafletSrc.DomEvent.on(cadLeft, 'click', function () {
+        setNum(-1, features);
+
+        if (exportIcon) {
+          leafletSrc.DomUtil.addClass(exportIcon, 'notVisible');
+        }
+      });
+    }
+
+    var showObject = pNode.getElementsByClassName('ShowObject')[0];
+
+    if (showObject) {
+      leafletSrc.DomEvent.on(showObject, 'click', function () {
+        var it = features[currNum];
+
+        popup._setBoundsView(it);
+
+        if (exportIcon) {
+          leafletSrc.DomUtil.removeClass(exportIcon, 'notVisible');
+        }
+      });
+    }
+  };
+
+  var Popup = {
+    getContent: function getContent(feature, nm, features) {
+      var node = leafletSrc.DomUtil.create('div', 'cadInfo');
+      node.innerHTML = Utils.getContent(feature, currNum, features);
+      setEvents(node, features);
+      return node;
+    },
+    getPopup: function getPopup(latlng, map) {
+      currNum = 0;
+      popup = leafletSrc.popup({
+        minWidth: 350,
+        className: 'cadasterPopup'
+      }).setLatLng(latlng).setContent('<div class="cadInfo">Поиск информации...</div>').openOn(map);
+      return popup;
+    }
+  };
+
   window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
-    var map, dataManager, zoomHook, prefix, cadGroup;
+    var map, dataManager, zoomHook, prefix, prefix1, cadGroup, itemsArr, overlay, getPopup;
     return regeneratorRuntime.wrap(function _callee$(_context) {
       while (1) {
         switch (_context.prev = _context.next) {
@@ -20165,13 +20748,14 @@
 
 
             prefix = 'https://pkk.rosreestr.ru/';
+            prefix1 = 'https://sveltejs.ru/';
             cadGroup = leafletSrc.layerGroup([new PbfLayer({
               // crossOrigin: '*',
               // maxNativeZoom: 11,
               maxZoom: 14,
               dataManager: dataManager,
               zoomHook: zoomHook,
-              template: 'https://sveltejs.ru/tiles/pkk/{z}/{y}/{x}.pbf' // template: prefix + 'arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=2'
+              template: prefix1 + 'tiles/pkk/{z}/{y}/{x}.pbf' // template: prefix + 'arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=2'
 
             }),
             /*
@@ -20210,7 +20794,7 @@
             leafletSrc.control.layers({
               // osm: L.tileLayer('https://sveltejs.ru/map/tiles/om/{z}/{x}/{y}.png?sw=1', {
               // osm: L.tileLayer('https://sveltejs.ru/mapp/om/{z}/{x}/{y}.png', {
-              osm: leafletSrc.tileLayer('https://sveltejs.ru/tiles/om/{z}/{x}/{y}.png', {
+              osm: leafletSrc.tileLayer(prefix1 + 'tiles/om/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               }).addTo(map)
             }, {
@@ -20241,7 +20825,135 @@
               // clickable:true
               // })
 
-            }).addTo(map); // const layers = [
+            }).addTo(map);
+
+            if (dataManager) {
+              getPopup = function getPopup(latlng, feature, features) {
+                var popup = Popup.getPopup(latlng, map, dataManager);
+
+                popup._getFeature = function (id, type, nm) {
+                  dataManager.postMessage({
+                    cmd: 'feature',
+                    prefix: prefix,
+                    nm: nm,
+                    id: id,
+                    type: type
+                  });
+                };
+
+                popup._setBoundsView = function (it) {
+                  var crs = leafletSrc.Projection.SphericalMercator;
+                  var lBounds = leafletSrc.latLngBounds(crs.unproject(leafletSrc.point(it.extent.xmin, it.extent.ymin)), crs.unproject(leafletSrc.point(it.extent.xmax, it.extent.ymax))); // var featureExtent = L.CadUtils.getFeatureExtent(it, map);
+
+                  var onViewreset = function onViewreset() {
+                    map.off('moveend', onViewreset);
+                    var bounds = map.getPixelBounds();
+                    var ne = map.options.crs.project(map.unproject(bounds.getTopRight()));
+                    var sw = map.options.crs.project(map.unproject(bounds.getBottomLeft()));
+                    var ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+                    var pars = {
+                      size: [bounds.max.x - bounds.min.x, bounds.max.y - bounds.min.y].join(','),
+                      bbox: [sw.x, sw.y, ne.x, ne.y].join(','),
+                      layers: 'show:' + ids.join(','),
+                      layerDefs: '{' + ids.map(function (nm) {
+                        return '\"' + nm + '\":\"ID = \'' + it.attrs.id + '\'"';
+                      }).join(',') + '}',
+                      format: 'png32',
+                      dpi: 96,
+                      transparent: 'true',
+                      imageSR: 102100,
+                      bboxSR: 102100
+                    };
+                    console.log('_setBoundsView ', pars);
+                    var imageUrl = prefix + 'arcgis/rest/services/PKK6/'; // imageUrl += (layer && layer.id === 10 ? 'ZONESSelected' : 'CadastreSelected') + '/MapServer/export?f=image&cross=' + Math.random();
+
+                    imageUrl += 'CadastreSelected/MapServer/export?f=image&cross=' + Math.random();
+
+                    for (var key in pars) {
+                      imageUrl += '&' + key + '=' + pars[key];
+                    }
+
+                    imageUrl = encodeURI(imageUrl); // const overlay = new L.ImageOverlay(imageUrl, map.getBounds(), {opacity: 0.5, geoLink: !flagExternalGeo, full: attr.full, id: id, it: it, clickable: true});
+
+                    if (overlay) {
+                      map.removeLayer(overlay);
+                    }
+
+                    overlay = new leafletSrc.ImageOverlay(imageUrl, map.getBounds(), {
+                      opacity: 0.5,
+                      crossOrigin: '*',
+                      clickable: true
+                    }).addTo(map); // L.CadUtils.setOverlay(it, map, flagExternalGeo);
+                  };
+
+                  map.once('moveend', onViewreset);
+                  map.fitBounds(lBounds, {
+                    reset: true
+                  });
+                };
+
+                return popup;
+              };
+
+              dataManager.onmessage = function (msg) {
+                var _msg$data = msg.data,
+                    cmd = _msg$data.cmd;
+                    _msg$data.url;
+                    var feature = _msg$data.feature,
+                    items = _msg$data.items;
+                    _msg$data.coords;
+                    _msg$data.pcoords;
+                    _msg$data.prefix;
+                    _msg$data.point;
+                    var nm = _msg$data.nm;
+
+                switch (cmd) {
+                  case 'features':
+                    itemsArr = items.arr;
+
+                    if (feature) {
+                      cadGroup._popup.setContent(Popup.getContent(feature, 0, itemsArr, dataManager));
+                    }
+
+                    break;
+
+                  case 'feature':
+                    cadGroup._popup.setContent(Popup.getContent(feature, nm, itemsArr, dataManager));
+
+                    break;
+
+                  case 'tile':
+                    // tile отрисован
+                    break;
+
+                  default:
+                    console.warn('Warning: Bad command ', cmd);
+                    break;
+                }
+              };
+
+              cadGroup.on('remove', function () {
+                map._container.style.cursor = '';
+              }).on('add', function () {
+                map._container.style.cursor = 'help';
+              });
+              map.on('click', function (ev) {
+                var latlng = ev.latlng;
+                cadGroup._latlng = latlng;
+                cadGroup._popup = getPopup(latlng); // cadGroup._popup = null;
+                // const point = {x: latlng.lng, y: latlng.lat};
+                // let url = prefix + 'api/features/?tolerance=16&skip=0&inPoint=true&text=' + latlng.lat + '+' + latlng.lng;
+                // console.log('click', ev, url);
+
+                dataManager.postMessage({
+                  cmd: 'features',
+                  prefix: prefix,
+                  point: latlng.lat + '+' + latlng.lng
+                });
+                /*
+                			*/
+              });
+            } // const layers = [
             // new PbfLayer({
             // dataManager: dataManager,
             // maxZoom: 11,
@@ -20290,7 +21002,8 @@
             	}
             */
 
-          case 6:
+
+          case 8:
           case "end":
             return _context.stop();
         }

@@ -1,7 +1,9 @@
 import './index.css';
+import './cadastre.css';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import PbfLayer from './TileLayer.Rosreestr.pbf.js';
+import Popup from './popup.js';
 
 window.addEventListener('load', async () => {
     const map = L.map('map', {}).setView([55.45, 37.37], 4);
@@ -31,6 +33,7 @@ window.addEventListener('load', async () => {
 
 	// const prefix = 'https://pkk5.kosmosnimki.ru/';
 	const prefix = 'https://pkk.rosreestr.ru/';
+	const prefix1 = 'https://sveltejs.ru/';
 	const cadGroup = L.layerGroup([
 		new PbfLayer({
 			// crossOrigin: '*',
@@ -38,7 +41,7 @@ window.addEventListener('load', async () => {
 			maxZoom: 14,
 			dataManager: dataManager,
 			zoomHook: zoomHook,
-			template: 'https://sveltejs.ru/tiles/pkk/{z}/{y}/{x}.pbf',
+			template:  prefix1 + 'tiles/pkk/{z}/{y}/{x}.pbf',
 			// template: prefix + 'arcgis/rest/services/Hosted/caddivsion/VectorTileServer/tile/{z}/{y}/{x}.pbf?sw=2'
 		})
 		,
@@ -80,7 +83,7 @@ window.addEventListener('load', async () => {
 	const lc = L.control.layers({
 		// osm: L.tileLayer('https://sveltejs.ru/map/tiles/om/{z}/{x}/{y}.png?sw=1', {
 		// osm: L.tileLayer('https://sveltejs.ru/mapp/om/{z}/{x}/{y}.png', {
-		osm: L.tileLayer('https://sveltejs.ru/tiles/om/{z}/{x}/{y}.png', {
+		osm: L.tileLayer(prefix1 + 'tiles/om/{z}/{x}/{y}.png', {
 				attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 			}).addTo(map)
 	}, {
@@ -112,6 +115,109 @@ window.addEventListener('load', async () => {
 			// clickable:true
 		// })
 	}).addTo(map);
+	if (dataManager) {
+		let itemsArr;
+		let overlay;
+		const getPopup = (latlng, feature, features) => {
+			const popup = Popup.getPopup(latlng, map, dataManager);
+			popup._getFeature = (id, type, nm) => {
+				dataManager.postMessage({
+					cmd: 'feature',
+					prefix: prefix,
+					nm: nm,
+					id: id,
+					type: type
+				});
+			};
+			popup._setBoundsView = (it) => {
+                const crs = L.Projection.SphericalMercator;
+                const lBounds = L.latLngBounds(
+                    crs.unproject(L.point(it.extent.xmin, it.extent.ymin)),
+                    crs.unproject(L.point(it.extent.xmax, it.extent.ymax))
+                );				// var featureExtent = L.CadUtils.getFeatureExtent(it, map);
+
+				var onViewreset = function() {
+					map.off('moveend', onViewreset);
+					const bounds = map.getPixelBounds();
+					const ne = map.options.crs.project(map.unproject(bounds.getTopRight()));
+					const sw = map.options.crs.project(map.unproject(bounds.getBottomLeft()));
+					const ids = [0, 1 , 2, 3, 4, 5, 6, 7, 8, 9, 10];
+					const pars = {
+						size: [bounds.max.x - bounds.min.x, bounds.max.y - bounds.min.y].join(','),
+						bbox: [sw.x, sw.y, ne.x, ne.y].join(','),
+						layers: 'show:' + ids.join(','),
+						layerDefs: '{' + ids.map((nm) => '\"' + nm + '\":\"ID = \'' + it.attrs.id + '\'"').join(',') + '}',
+						format: 'png32',
+						dpi: 96,
+						transparent: 'true',
+						imageSR: 102100,
+						bboxSR: 102100
+					};
+					console.log('_setBoundsView ', pars);
+					let imageUrl = prefix +  'arcgis/rest/services/PKK6/';
+					// imageUrl += (layer && layer.id === 10 ? 'ZONESSelected' : 'CadastreSelected') + '/MapServer/export?f=image&cross=' + Math.random();
+					imageUrl += 'CadastreSelected/MapServer/export?f=image&cross=' + Math.random();
+					for (var key in pars) {
+						imageUrl += '&' + key + '=' + pars[key];
+					}
+					imageUrl = encodeURI(imageUrl);
+					// const overlay = new L.ImageOverlay(imageUrl, map.getBounds(), {opacity: 0.5, geoLink: !flagExternalGeo, full: attr.full, id: id, it: it, clickable: true});
+					if (overlay) {
+						map.removeLayer(overlay);
+					}
+					overlay = new L.ImageOverlay(imageUrl, map.getBounds(), {opacity: 0.5, crossOrigin: '*', clickable: true}).addTo(map);
+
+					// L.CadUtils.setOverlay(it, map, flagExternalGeo);
+					
+				};
+				map.once('moveend', onViewreset);
+				map.fitBounds(lBounds, {reset: true});
+			};
+			return popup;
+		};
+		dataManager.onmessage = msg => {
+			const {cmd, url, feature, items, coords, pcoords, prefix, point, nm} = msg.data;
+			switch(cmd) {
+				case 'features':
+					itemsArr = items.arr;
+					if (feature) {
+						cadGroup._popup.setContent(Popup.getContent(feature, 0, itemsArr, dataManager));
+					}
+					break;
+				case 'feature':
+					cadGroup._popup.setContent(Popup.getContent(feature, nm, itemsArr, dataManager));
+					break;
+				case 'tile':	// tile отрисован
+					break;
+				default:
+					console.warn('Warning: Bad command ', cmd);
+					break;
+			}
+		};
+		cadGroup
+			.on('remove', () => {
+				map._container.style.cursor = '';
+			})
+			.on('add', () => {
+				map._container.style.cursor = 'help';
+			});
+		map.on('click', ev => {
+			const latlng = ev.latlng;
+			cadGroup._latlng = latlng;
+			cadGroup._popup = getPopup(latlng);
+			// cadGroup._popup = null;
+			// const point = {x: latlng.lng, y: latlng.lat};
+			// let url = prefix + 'api/features/?tolerance=16&skip=0&inPoint=true&text=' + latlng.lat + '+' + latlng.lng;
+						// console.log('click', ev, url);
+			dataManager.postMessage({
+				cmd: 'features',
+				prefix: prefix,
+				point: latlng.lat + '+' + latlng.lng,
+			});
+/*
+			*/
+		});
+	}
     // const layers = [
 		// new PbfLayer({
 			// dataManager: dataManager,
