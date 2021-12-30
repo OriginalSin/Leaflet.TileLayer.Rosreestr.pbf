@@ -1,5 +1,6 @@
 import Renderer from './renderer2d.js';
 import Features from './features.js';
+import Msqr from './msqr.js';
 
 const getFeature = (it, out) => {
 	Features.getFeature(it.attrs.id, it.type, out.prefix).then(json1 => {
@@ -45,7 +46,7 @@ onmessage = function(evt) {
 			break;
 		case 'features':
 			Features.getFeatures(point, prefix).then(json => {
-				console.log('Features.getFeatures', json, prefix, point);
+				// console.log('Features.getFeatures', json, prefix, point);
 				let out = {
 					cmd: 'features',
 					prefix: prefix,
@@ -65,6 +66,27 @@ onmessage = function(evt) {
 				} else {
 					self.postMessage(out);
 				}
+			});
+			break;
+		case 'msqr':
+			let pathPoints = Msqr.MSQR(data.pixels, {
+				path2D: false,
+				maxShapes: 5,
+				width: data.width,
+				height: data.height,
+				// startPoint: point,
+				// filterType: filterType,
+				// alpha: 150,
+				// padding: attr.padding || 2,
+				// alignWeight: attr.alignWeight || 1.5,
+				// tolerance: 0,
+				// tolerance: [0.7, 1.5],
+				// align: true,
+			});
+			self.postMessage( {
+				cmd: 'msqr',
+				it: data.it,
+				pathPoints: pathPoints
 			});
 			break;
 		default:
