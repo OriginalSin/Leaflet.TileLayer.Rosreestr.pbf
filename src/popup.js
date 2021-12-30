@@ -64,9 +64,7 @@ const setBoundsView = (it) => {
 		popup._overlay = new L.ImageOverlay(imageUrl, map.getBounds(), {opacity: 0.5, crossOrigin: '*', clickable: true})
 			.on('error', (ev) => {
 				let img = ev.target._image;
-				console.log('ggg', img.src);
 				if (img.src.indexOf('retr=1') === -1) {
-					// img.src = '';
 					img.src = imageUrl + '&retr=1';
 				}
 			})

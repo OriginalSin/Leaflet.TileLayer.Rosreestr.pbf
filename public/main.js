@@ -22244,10 +22244,8 @@
         clickable: true
       }).on('error', function (ev) {
         var img = ev.target._image;
-        console.log('ggg', img.src);
 
         if (img.src.indexOf('retr=1') === -1) {
-          // img.src = '';
           img.src = imageUrl + '&retr=1';
         }
       }).on('load', function (ev) {
