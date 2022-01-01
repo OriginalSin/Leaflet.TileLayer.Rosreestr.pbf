@@ -12,6 +12,9 @@ const setNum = (delta, features) => {
 	const it = features[nextNum];
 	if (it) {
 		currNum = nextNum;
+		popup.setContent(getContent(it, features));
+		toggleSearch(true);
+
 		const dm = popup._map.options.dataManager;
 		dm.postMessage({
 			cmd: 'feature',
@@ -104,25 +107,25 @@ const setEvents = (pNode, features) => {
 	if (cadRight) {
 		L.DomEvent.on(cadRight, 'click', () => {
 			setNum(1, features);
-			if (exportIcon) { L.DomUtil.addClass(exportIcon, 'notVisible'); }
 		});
 	}
 	const cadLeft = pNode.getElementsByClassName('cadLeft')[0];
 	if (cadLeft) {
 		L.DomEvent.on(cadLeft, 'click', () => {
 			setNum(-1, features);
-			if (exportIcon) { L.DomUtil.addClass(exportIcon, 'notVisible'); }
 		});
 	}
 	const showObject = pNode.getElementsByClassName('ShowObject')[0];
 	if (showObject) {
-		L.DomEvent.on(showObject, 'click', () => {
+		L.DomEvent.on(showObject, 'click', (ev) => {
+			toggleSearch(true);
+			L.DomEvent.stopPropagation(ev);
 			setBoundsView(features[currNum]);
 		});
 	}
 };
 
-const getContent = (feature, nm, features) => {
+const getContent = (feature, features) => {
 	let node = L.DomUtil.create('div', 'cadInfo');
 	node.innerHTML = Utils.getContent(feature, currNum, features);
 	setEvents(node, features);
@@ -139,9 +142,10 @@ const getGeoJson = (pathPoints, it) => {
 			return map.containerPointToLatLng(p);
 		});
 	});
+	const search = popup.getContent().getElementsByClassName('search')[0];
+	if (search) { L.DomUtil.addClass(search, 'notVisible'); }
 	if (rings.length) {
-		const exportIcon = popup.getContent().getElementsByClassName('exportIcon')[0];
-		if (exportIcon) { L.DomUtil.removeClass(exportIcon, 'notVisible'); }
+		toggleSearch(false);
 
 		if (map.options.clearGeoJson && currGeo && currGeo._map) {
 			map.removeLayer(currGeo);
@@ -155,23 +159,37 @@ const getGeoJson = (pathPoints, it) => {
 		return currGeoJson;
 	}
 };
+const toggleSearch = (flag) => {
+	const pNode = popup.getContent();
+	const search = pNode.getElementsByClassName('search')[0];
+	const exportIcon = pNode.getElementsByClassName('exportIcon')[0];
+	if (search && exportIcon) {
+		if (flag) {
+			L.DomUtil.removeClass(search, 'notVisible');
+			L.DomUtil.addClass(exportIcon, 'notVisible');
+		} else {
+			L.DomUtil.addClass(search, 'notVisible');
+			L.DomUtil.removeClass(exportIcon, 'notVisible');
+		}
+	}
+};
 
 let itemsArr;
 export default {
 	getDataManager: () => {
-		const dataManager = L.DomUtil.create('canvas', '').transferControlToOffscreen ? new Worker("dataManager.js") : null;
-		dataManager.onmessage = msg => {
+		const dm = L.DomUtil.create('canvas', '').transferControlToOffscreen ? new Worker("dataManager.js") : null;
+		dm.onmessage = msg => {
 			const data = msg.data;
 			const {cmd, url, feature, items, coords, pcoords, prefix, point, nm} = data;
 			switch(cmd) {
 				case 'features':
 					itemsArr = items.arr;
 					if (feature) {
-						popup.setContent(getContent(feature, 0, itemsArr));
+						popup.setContent(getContent(feature, itemsArr));
 					}
 					break;
 				case 'feature':
-					popup.setContent(getContent(feature, nm, itemsArr));
+					popup.setContent(getContent(feature, itemsArr));
 					break;
 				case 'tile':	// tile отрисован
 					break;
@@ -183,7 +201,7 @@ export default {
 					break;
 			}
 		};
-		return dataManager;
+		return dm;
 	},
 	clickOnMap: (ev) => {
 		const latlng = ev.latlng;
@@ -199,7 +217,6 @@ export default {
 			prefix: Config.pkkPrefix,
 			point: latlng.lat + '+' + latlng.lng,
 		});
-
 		return popup;
 	}
 };

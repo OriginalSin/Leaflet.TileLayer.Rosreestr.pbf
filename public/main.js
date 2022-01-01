@@ -1046,7 +1046,7 @@
   (module.exports = function (key, value) {
     return sharedStore[key] || (sharedStore[key] = value !== undefined ? value : {});
   })('versions', []).push({
-    version: '3.20.0',
+    version: '3.20.1',
     mode: 'global',
     copyright: '© 2021 Denis Pushkarev (zloirock.ru)'
   });
@@ -1130,7 +1130,7 @@
 
   // Thank's IE8 for his funny defineProperty
   var ie8DomDefine = !descriptors && !fails(function () {
-    // eslint-disable-next-line es/no-object-defineproperty -- requied for testing
+    // eslint-disable-next-line es/no-object-defineproperty -- required for testing
     return Object.defineProperty(documentCreateElement('div'), 'a', {
       get: function () { return 7; }
     }).a != 7;
@@ -15820,6 +15820,67 @@
 
   });
 
+  // `Object.keys` method
+  // https://tc39.es/ecma262/#sec-object.keys
+  // eslint-disable-next-line es/no-object-keys -- safe
+  var objectKeys = Object.keys || function keys(O) {
+    return objectKeysInternal(O, enumBugKeys);
+  };
+
+  // eslint-disable-next-line es/no-object-assign -- safe
+  var $assign = Object.assign;
+  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
+  var defineProperty$3 = Object.defineProperty;
+  var concat = functionUncurryThis([].concat);
+
+  // `Object.assign` method
+  // https://tc39.es/ecma262/#sec-object.assign
+  var objectAssign = !$assign || fails(function () {
+    // should have correct order of operations (Edge bug)
+    if (descriptors && $assign({ b: 1 }, $assign(defineProperty$3({}, 'a', {
+      enumerable: true,
+      get: function () {
+        defineProperty$3(this, 'b', {
+          value: 3,
+          enumerable: false
+        });
+      }
+    }), { b: 2 })).b !== 1) return true;
+    // should work with symbols and should have deterministic property order (V8 bug)
+    var A = {};
+    var B = {};
+    // eslint-disable-next-line es/no-symbol -- safe
+    var symbol = Symbol();
+    var alphabet = 'abcdefghijklmnopqrst';
+    A[symbol] = 7;
+    alphabet.split('').forEach(function (chr) { B[chr] = chr; });
+    return $assign({}, A)[symbol] != 7 || objectKeys($assign({}, B)).join('') != alphabet;
+  }) ? function assign(target, source) { // eslint-disable-line no-unused-vars -- required for `.length`
+    var T = toObject(target);
+    var argumentsLength = arguments.length;
+    var index = 1;
+    var getOwnPropertySymbols = objectGetOwnPropertySymbols.f;
+    var propertyIsEnumerable = objectPropertyIsEnumerable.f;
+    while (argumentsLength > index) {
+      var S = indexedObject(arguments[index++]);
+      var keys = getOwnPropertySymbols ? concat(objectKeys(S), getOwnPropertySymbols(S)) : objectKeys(S);
+      var length = keys.length;
+      var j = 0;
+      var key;
+      while (length > j) {
+        key = keys[j++];
+        if (!descriptors || functionCall(propertyIsEnumerable, S, key)) T[key] = S[key];
+      }
+    } return T;
+  } : $assign;
+
+  // `Object.assign` method
+  // https://tc39.es/ecma262/#sec-object.assign
+  // eslint-disable-next-line es/no-object-assign -- required for testing
+  _export({ target: 'Object', stat: true, forced: Object.assign !== objectAssign }, {
+    assign: objectAssign
+  });
+
   // `Object.prototype.toString` method implementation
   // https://tc39.es/ecma262/#sec-object.prototype.tostring
   var objectToString = toStringTagSupport ? {}.toString : function toString() {
@@ -15875,7 +15936,7 @@
     };
   }() : undefined);
 
-  var defineProperty$3 = objectDefineProperty.f;
+  var defineProperty$2 = objectDefineProperty.f;
 
 
 
@@ -15884,7 +15945,7 @@
   var setToStringTag = function (target, TAG, STATIC) {
     if (target && !STATIC) target = target.prototype;
     if (target && !hasOwnProperty_1(target, TO_STRING_TAG$1)) {
-      defineProperty$3(target, TO_STRING_TAG$1, { configurable: true, value: TAG });
+      defineProperty$2(target, TO_STRING_TAG$1, { configurable: true, value: TAG });
     }
   };
 
@@ -16091,7 +16152,7 @@
   var MessageChannel = global_1.MessageChannel;
   var String$2 = global_1.String;
   var counter = 0;
-  var queue = {};
+  var queue$1 = {};
   var ONREADYSTATECHANGE = 'onreadystatechange';
   var location, defer, channel, port;
 
@@ -16101,9 +16162,9 @@
   } catch (error) { /* empty */ }
 
   var run = function (id) {
-    if (hasOwnProperty_1(queue, id)) {
-      var fn = queue[id];
-      delete queue[id];
+    if (hasOwnProperty_1(queue$1, id)) {
+      var fn = queue$1[id];
+      delete queue$1[id];
       fn();
     }
   };
@@ -16127,14 +16188,14 @@
   if (!set || !clear) {
     set = function setImmediate(fn) {
       var args = arraySlice(arguments, 1);
-      queue[++counter] = function () {
+      queue$1[++counter] = function () {
         functionApply(isCallable(fn) ? fn : Function$1(fn), undefined, args);
       };
       defer(counter);
       return counter;
     };
     clear = function clearImmediate(id) {
-      delete queue[id];
+      delete queue$1[id];
     };
     // Node.js 0.8-
     if (engineIsNode) {
@@ -16318,9 +16379,34 @@
     }
   };
 
+  var Queue = function () {
+    this.head = null;
+    this.tail = null;
+  };
+
+  Queue.prototype = {
+    add: function (item) {
+      var entry = { item: item, next: null };
+      if (this.head) this.tail.next = entry;
+      else this.head = entry;
+      this.tail = entry;
+    },
+    get: function () {
+      var entry = this.head;
+      if (entry) {
+        this.head = entry.next;
+        if (this.tail === entry) this.tail = null;
+        return entry.item;
+      }
+    }
+  };
+
+  var queue = Queue;
+
   var engineIsBrowser = typeof window == 'object';
 
   var task = task$1.set;
+
 
 
 
@@ -16395,49 +16481,50 @@
     return isObject(it) && isCallable(then = it.then) ? then : false;
   };
 
+  var callReaction = function (reaction, state) {
+    var value = state.value;
+    var ok = state.state == FULFILLED;
+    var handler = ok ? reaction.ok : reaction.fail;
+    var resolve = reaction.resolve;
+    var reject = reaction.reject;
+    var domain = reaction.domain;
+    var result, then, exited;
+    try {
+      if (handler) {
+        if (!ok) {
+          if (state.rejection === UNHANDLED) onHandleUnhandled(state);
+          state.rejection = HANDLED;
+        }
+        if (handler === true) result = value;
+        else {
+          if (domain) domain.enter();
+          result = handler(value); // can throw
+          if (domain) {
+            domain.exit();
+            exited = true;
+          }
+        }
+        if (result === reaction.promise) {
+          reject(TypeError$5('Promise-chain cycle'));
+        } else if (then = isThenable(result)) {
+          functionCall(then, result, resolve, reject);
+        } else resolve(result);
+      } else reject(value);
+    } catch (error) {
+      if (domain && !exited) domain.exit();
+      reject(error);
+    }
+  };
+
   var notify = function (state, isReject) {
     if (state.notified) return;
     state.notified = true;
-    var chain = state.reactions;
     microtask(function () {
-      var value = state.value;
-      var ok = state.state == FULFILLED;
-      var index = 0;
-      // variable length - can't use forEach
-      while (chain.length > index) {
-        var reaction = chain[index++];
-        var handler = ok ? reaction.ok : reaction.fail;
-        var resolve = reaction.resolve;
-        var reject = reaction.reject;
-        var domain = reaction.domain;
-        var result, then, exited;
-        try {
-          if (handler) {
-            if (!ok) {
-              if (state.rejection === UNHANDLED) onHandleUnhandled(state);
-              state.rejection = HANDLED;
-            }
-            if (handler === true) result = value;
-            else {
-              if (domain) domain.enter();
-              result = handler(value); // can throw
-              if (domain) {
-                domain.exit();
-                exited = true;
-              }
-            }
-            if (result === reaction.promise) {
-              reject(TypeError$5('Promise-chain cycle'));
-            } else if (then = isThenable(result)) {
-              functionCall(then, result, resolve, reject);
-            } else resolve(result);
-          } else reject(value);
-        } catch (error) {
-          if (domain && !exited) domain.exit();
-          reject(error);
-        }
+      var reactions = state.reactions;
+      var reaction;
+      while (reaction = reactions.get()) {
+        callReaction(reaction, state);
       }
-      state.reactions = [];
       state.notified = false;
       if (isReject && !state.rejection) onUnhandled(state);
     });
@@ -16554,7 +16641,7 @@
         done: false,
         notified: false,
         parent: false,
-        reactions: [],
+        reactions: new queue(),
         rejection: false,
         state: PENDING,
         value: undefined
@@ -16565,14 +16652,15 @@
       // https://tc39.es/ecma262/#sec-promise.prototype.then
       then: function then(onFulfilled, onRejected) {
         var state = getInternalPromiseState(this);
-        var reactions = state.reactions;
         var reaction = newPromiseCapability(speciesConstructor(this, PromiseConstructor));
+        state.parent = true;
         reaction.ok = isCallable(onFulfilled) ? onFulfilled : true;
         reaction.fail = isCallable(onRejected) && onRejected;
         reaction.domain = engineIsNode ? process.domain : undefined;
-        state.parent = true;
-        reactions[reactions.length] = reaction;
-        if (state.state != PENDING) notify(state, false);
+        if (state.state == PENDING) state.reactions.add(reaction);
+        else microtask(function () {
+          callReaction(reaction, state);
+        });
         return reaction.promise;
       },
       // `Promise.prototype.catch` method
@@ -16777,13 +16865,6 @@
   }
 
   handlePrototype$1(domTokenListPrototype);
-
-  // `Object.keys` method
-  // https://tc39.es/ecma262/#sec-object.keys
-  // eslint-disable-next-line es/no-object-keys -- safe
-  var objectKeys = Object.keys || function keys(O) {
-    return objectKeysInternal(O, enumBugKeys);
-  };
 
   var FAILS_ON_PRIMITIVES = fails(function () { objectKeys(1); });
 
@@ -19489,6 +19570,21 @@
   };
 
   var PbfLayer = leafletSrc.GridLayer.extend({
+    options: {
+      zoomHook: function zoomHook(coords) {
+        var tp = Object.assign({}, coords);
+        var d = tp.z - 12;
+
+        if (d > 0) {
+          tp.z = 12;
+          tp.scale = Math.pow(2, d);
+          tp.x = Math.floor(tp.x / tp.scale);
+          tp.y = Math.floor(tp.y / tp.scale);
+        }
+
+        return tp;
+      }
+    },
     createTile: function createTile(coords, done) {
       var _this = this;
 
@@ -19713,7 +19809,7 @@
     return methods;
   };
 
-  var defineProperty$2 = objectDefineProperty.f;
+  var defineProperty$1 = objectDefineProperty.f;
 
 
 
@@ -19767,7 +19863,7 @@
 
   // V8 ~ Chrome 45- bug
   if (descriptors && values.name !== 'values') try {
-    defineProperty$2(values, 'name', { value: 'values' });
+    defineProperty$1(values, 'name', { value: 'values' });
   } catch (error) { /* empty */ }
 
   var charAt$3 = stringMultibyte.charAt;
@@ -19861,53 +19957,6 @@
       // throws in Safari
       || new URL('http://x', undefined).host !== 'x';
   });
-
-  // eslint-disable-next-line es/no-object-assign -- safe
-  var $assign = Object.assign;
-  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
-  var defineProperty$1 = Object.defineProperty;
-  var concat = functionUncurryThis([].concat);
-
-  // `Object.assign` method
-  // https://tc39.es/ecma262/#sec-object.assign
-  var objectAssign = !$assign || fails(function () {
-    // should have correct order of operations (Edge bug)
-    if (descriptors && $assign({ b: 1 }, $assign(defineProperty$1({}, 'a', {
-      enumerable: true,
-      get: function () {
-        defineProperty$1(this, 'b', {
-          value: 3,
-          enumerable: false
-        });
-      }
-    }), { b: 2 })).b !== 1) return true;
-    // should work with symbols and should have deterministic property order (V8 bug)
-    var A = {};
-    var B = {};
-    // eslint-disable-next-line es/no-symbol -- safe
-    var symbol = Symbol();
-    var alphabet = 'abcdefghijklmnopqrst';
-    A[symbol] = 7;
-    alphabet.split('').forEach(function (chr) { B[chr] = chr; });
-    return $assign({}, A)[symbol] != 7 || objectKeys($assign({}, B)).join('') != alphabet;
-  }) ? function assign(target, source) { // eslint-disable-line no-unused-vars -- required for `.length`
-    var T = toObject(target);
-    var argumentsLength = arguments.length;
-    var index = 1;
-    var getOwnPropertySymbols = objectGetOwnPropertySymbols.f;
-    var propertyIsEnumerable = objectPropertyIsEnumerable.f;
-    while (argumentsLength > index) {
-      var S = indexedObject(arguments[index++]);
-      var keys = getOwnPropertySymbols ? concat(objectKeys(S), getOwnPropertySymbols(S)) : objectKeys(S);
-      var length = keys.length;
-      var j = 0;
-      var key;
-      while (length > j) {
-        key = keys[j++];
-        if (!descriptors || functionCall(propertyIsEnumerable, S, key)) T[key] = S[key];
-      }
-    } return T;
-  } : $assign;
 
   // call something on iterator step with safe closing on error
   var callWithSafeIterationClosing = function (iterator, fn, value, ENTRIES) {
@@ -22135,31 +22184,17 @@
 
     if (date) {
       trs.push('<tr><td class="first">Дата изменения сведений в ГКН:</td><td>' + date + '</td></tr>');
-    } // acnum: null
-    // cdzone: "218020010001"
-    // content_restrictions: "Постановление администрации Брянской области от 24 октября 2008 г. № 996:\n\"2. Режим охраны территории Заказника\n2.1. На территории Заказника запрещается:\n- охота и натаска собак;\n- рубки главного пользования и иные сплошные рубки леса в период отела диких копытных животных и массового гнездования птиц - с 15 апреля по 15 июня;\n- рубки главного пользования и иные сплошные рубки леса в местах расположения глухариных токов;\n- рубки главного пользования и иные сплошные рубки леса в местах расположения барсучьих поселений и в 500-метровой зоне вокруг них;\n- прочие виды рубок в местах расположения барсучьих поселений и в 500-метровой зоне вокруг них в первой половине лета (во время подрастания потомства барсуков);\n- подсочка леса в местах расположения глухариных токов;\n- осушение и распашка пойм рек;\n- мелиоративные работы;\n- добыча полезных ископаемых;\n- применение любых пестицидов и минеральных удобрений в лесном хозяйстве;\n- засорение территории, складирование и захоронение любых отходов.\n2.2. На территории Заказника разрешается:\n- проведение биотехнических мероприятий, направленных на создание благоприятных условий для завоза, временного вольерного содержания и дальнейшего вольного обитания зубров на территории заказника;\n- выпас скота, сенокошение и иная сельскохозяйственная деятельность на сельскохозяйственных землях в пределах заказника;\n- рубки главного и промежуточного пользования (за исключением случаев, предусмотренных Положением);\n- подсочка леса (за исключением случаев, предусмотренных Положением);\n- сбор ягод и грибов;\n- любительский лов рыбы;\n- экологический туризм;\n- проведение научных исследований и мероприятий, направленных на поддержание биологического разнообразия;\n- другие виды деятельности, не наносящие вреда природным комплексам и объектам заказника.\""
-    // desc: null
-    // id: "32:10-9.2"
-    // json_documents: []
-    // name_zone: "Особо охраняемая природная территория регионального значения государственный природный заказник «Карачевский»"
-    // number_zone: "32:10-9.2"
-    // rayon: "32:10"
-    // rayon_cn: "32:10"
-    // rec_date: "Tue Dec 15 00:00:00 2020"
-    // subtype: "218020010000"
-    // zone_kind: "Особо охраняемая природная территория"
-
+    }
 
     return trs.join('\n');
   };
 
   var Utils = {
     getContent: function getContent(feature, nm, features) {
-      // let res = L.DomUtil.create('div', 'cadInfo');
       var it = features[nm];
       var id = it.attrs.id;
       var cLayer = getCadastreLayer(id, it.type);
-      return "\n\t\t\t<div class=\"cadItem\">\n\t\t\t\t".concat(cadNav(nm, features, id, cLayer.title), "\n\t\t\t\t<div class=\"featureCont\">\n\t\t\t\t\t<table class=\"table\"><tbody>\n\t\t\t\t\t").concat(featureCont(feature, cLayer.title), "\n\t\t\t\t\t</tbody>\n\t\t\t\t\t</table>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"operCont\">\n\t\t\t\t\t<button class=\"ShowObject\">\u0412\u044B\u0434\u0435\u043B\u0438\u0442\u044C \u0433\u0440\u0430\u043D\u0438\u0446\u0443</button>\n\t\t\t\t\t<a class=\"exportIcon notVisible\" target=\"_blank\" href=\"\" title=\"\u042D\u043A\u0441\u043F\u043E\u0440\u0442 \u0432 GeoJSON\"></a>\n\t\t\t\t\t<!-- a class=\"button exportIcon notVisible\" target=\"_blank\" href=\"\" title=\"\u042D\u043A\u0441\u043F\u043E\u0440\u0442 \u0432 GeoJSON\">\n\t\t\t\t\t\t<svg role=\"img\" class=\"svgIcon\">\n\t\t\t\t\t\t<use xmlns:xlink=\"http://www.w3.org/1999/xlink\" xlink:href=\"#download\"></use>\n\t\t\t\t\t\t</svg>\n\t\t\t\t\t</a -->\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t");
+      return "\n\t\t\t<div class=\"cadItem\">\n\t\t\t\t".concat(cadNav(nm, features, id, cLayer.title), "\n\t\t\t\t<div class=\"featureCont\">\n\t\t\t\t\t<table class=\"table\"><tbody>\n\t\t\t\t\t").concat(featureCont(feature, cLayer.title), "\n\t\t\t\t\t</tbody>\n\t\t\t\t\t</table>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"operCont\">\n\t\t\t\t\t<button class=\"ShowObject\">\u0412\u044B\u0434\u0435\u043B\u0438\u0442\u044C \u0433\u0440\u0430\u043D\u0438\u0446\u0443</button>\n\t\t\t\t\t<a class=\"exportIcon notVisible\" target=\"_blank\" href=\"\" title=\"\u042D\u043A\u0441\u043F\u043E\u0440\u0442 \u0432 GeoJSON\"></a>\n\t\t\t\t\t<span class=\"search notVisible\">\u041F\u043E\u0438\u0441\u043A \u0438\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0438\u0438...</span>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t");
     }
   };
 
@@ -22179,6 +22214,8 @@
 
     if (it) {
       currNum = nextNum;
+      popup.setContent(getContent(it, features));
+      toggleSearch(true);
       var dm = popup._map.options.dataManager;
       dm.postMessage({
         cmd: 'feature',
@@ -22293,10 +22330,6 @@
     if (cadRight) {
       leafletSrc.DomEvent.on(cadRight, 'click', function () {
         setNum(1, features);
-
-        if (exportIcon) {
-          leafletSrc.DomUtil.addClass(exportIcon, 'notVisible');
-        }
       });
     }
 
@@ -22305,23 +22338,21 @@
     if (cadLeft) {
       leafletSrc.DomEvent.on(cadLeft, 'click', function () {
         setNum(-1, features);
-
-        if (exportIcon) {
-          leafletSrc.DomUtil.addClass(exportIcon, 'notVisible');
-        }
       });
     }
 
     var showObject = pNode.getElementsByClassName('ShowObject')[0];
 
     if (showObject) {
-      leafletSrc.DomEvent.on(showObject, 'click', function () {
+      leafletSrc.DomEvent.on(showObject, 'click', function (ev) {
+        toggleSearch(true);
+        leafletSrc.DomEvent.stopPropagation(ev);
         setBoundsView(features[currNum]);
       });
     }
   };
 
-  var getContent = function getContent(feature, nm, features) {
+  var getContent = function getContent(feature, features) {
     var node = leafletSrc.DomUtil.create('div', 'cadInfo');
     node.innerHTML = Utils.getContent(feature, currNum, features);
     setEvents(node, features);
@@ -22339,13 +22370,14 @@
         return map.containerPointToLatLng(p);
       });
     });
+    var search = popup.getContent().getElementsByClassName('search')[0];
+
+    if (search) {
+      leafletSrc.DomUtil.addClass(search, 'notVisible');
+    }
 
     if (rings.length) {
-      var exportIcon = popup.getContent().getElementsByClassName('exportIcon')[0];
-
-      if (exportIcon) {
-        leafletSrc.DomUtil.removeClass(exportIcon, 'notVisible');
-      }
+      toggleSearch(false);
 
       if (map.options.clearGeoJson && currGeo && currGeo._map) {
         map.removeLayer(currGeo);
@@ -22370,12 +22402,28 @@
     }
   };
 
+  var toggleSearch = function toggleSearch(flag) {
+    var pNode = popup.getContent();
+    var search = pNode.getElementsByClassName('search')[0];
+    var exportIcon = pNode.getElementsByClassName('exportIcon')[0];
+
+    if (search && exportIcon) {
+      if (flag) {
+        leafletSrc.DomUtil.removeClass(search, 'notVisible');
+        leafletSrc.DomUtil.addClass(exportIcon, 'notVisible');
+      } else {
+        leafletSrc.DomUtil.addClass(search, 'notVisible');
+        leafletSrc.DomUtil.removeClass(exportIcon, 'notVisible');
+      }
+    }
+  };
+
   var itemsArr;
   var Popup = {
     getDataManager: function getDataManager() {
-      var dataManager = leafletSrc.DomUtil.create('canvas', '').transferControlToOffscreen ? new Worker("dataManager.js") : null;
+      var dm = leafletSrc.DomUtil.create('canvas', '').transferControlToOffscreen ? new Worker("dataManager.js") : null;
 
-      dataManager.onmessage = function (msg) {
+      dm.onmessage = function (msg) {
         var data = msg.data;
         var cmd = data.cmd;
             data.url;
@@ -22385,20 +22433,20 @@
             data.pcoords;
             data.prefix;
             data.point;
-            var nm = data.nm;
+            data.nm;
 
         switch (cmd) {
           case 'features':
             itemsArr = items.arr;
 
             if (feature) {
-              popup.setContent(getContent(feature, 0, itemsArr));
+              popup.setContent(getContent(feature, itemsArr));
             }
 
             break;
 
           case 'feature':
-            popup.setContent(getContent(feature, nm, itemsArr));
+            popup.setContent(getContent(feature, itemsArr));
             break;
 
           case 'tile':
@@ -22415,7 +22463,7 @@
         }
       };
 
-      return dataManager;
+      return dm;
     },
     clickOnMap: function clickOnMap(ev) {
       var latlng = ev.latlng;

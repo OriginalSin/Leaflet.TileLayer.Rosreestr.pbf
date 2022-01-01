@@ -1,8 +1,8 @@
 import { babel } from '@rollup/plugin-babel';
-//import babel from 'rollup-plugin-babel';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import css from 'rollup-plugin-css-porter';
+import { uglify } from "rollup-plugin-uglify";
 
 const extensions = [
   '.js', '.jsx', '.ts', '.tsx', '.css'
@@ -31,6 +31,32 @@ export default [
                 exclude: ['node_modules/@babel/**', 'node_modules/core-js/**'],
                 include: ['src/**']
             }),
+        ],
+    },
+    {
+        input: 'src/pkk.js',        
+        external: ['leaflet'],
+        output: { 
+            file: 'public/pkk.js',
+            format: 'iife',
+            sourcemap: true,
+            exports: 'auto',
+            name: 'Rosreestr',
+            globals: {
+                'leaflet': 'L'
+            },
+        },
+        plugins: [                      
+            resolve({ preferBuiltins: false }),
+            commonjs(),            
+            css({dest: 'public/pkk.css', minified: true}),           
+            babel({                
+                babelHelpers: 'bundled',
+                extensions: ['.js', '.mjs'],
+                exclude: ['node_modules/@babel/**', 'node_modules/core-js/**'],
+                include: ['src/**']
+            }),
+			uglify()
         ],
     },
     {
@@ -81,6 +107,7 @@ export default [
 				babelHelpers: 'bundled',
 				include: ['src/**/*'],
 			}),
+			uglify()
 		],    
 	}
 ];

@@ -2,6 +2,19 @@ import L from 'leaflet';
 import Renderer from './worker/renderer2d.js';
 
 export default L.GridLayer.extend({
+    options: {
+		zoomHook: function(coords) {
+			let tp = Object.assign({}, coords);
+			let d = tp.z - 12;
+			if (d > 0) {
+				tp.z = 12;
+				tp.scale = Math.pow(2, d);
+				tp.x = Math.floor(tp.x / tp.scale);
+				tp.y = Math.floor(tp.y / tp.scale);
+			}
+			return tp;
+		}
+	},
     createTile: function(coords, done) {
         let tile = L.DomUtil.create('canvas', 'leaflet-tile');
         let size = this.getTileSize();
