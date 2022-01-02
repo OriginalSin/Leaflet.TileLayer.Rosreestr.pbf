@@ -1,11 +1,3 @@
-html, body {
-    padding: 0px;
-    margin: 0px;
-}
-#map {
-    width: 100%;
-    height: calc(100vh - 5px);
-}
 /* added css for cadastre Popup */
 .cadInfo .cadNum {
     font-weight: bold;
@@ -121,6 +113,14 @@ html, body {
     margin-top: 12px;
 }
 
+html, body {
+    padding: 0px;
+    margin: 0px;
+}
+#map {
+    width: 100%;
+    height: calc(100vh - 5px);
+}
 /* required styles */
 
 .leaflet-pane,

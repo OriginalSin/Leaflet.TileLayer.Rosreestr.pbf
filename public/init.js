@@ -18,9 +18,12 @@ window.addEventListener('load', async () => {
 	const lc = L.control.layers({
 		osm: L.tileLayer(Config.tilesPrefix + 'tiles/om/{z}/{x}/{y}.png', {
 				attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-			}).addTo(map)
+			}).addTo(map),
+		'Снимки(Яндекс)': L.tileLayer.Mercator(Config.tilesPrefix + 'tiles/ys/{z}/{x}/{y}.png', {
+				attribution: '&copy; <a href="https://n.maps.yandex.ru/?oid=1900133#!/?z=18&ll=36.860478%2C55.429679&l=nk%23map">Yandex</a> contributors'
+			})
 	}, {
-		cadGroup: L.layerGroup([
+		'Россрестр': L.layerGroup([
 			new Rosreestr.PbfLayer({
 				// crossOrigin: '*',
 				// maxNativeZoom: 11,
@@ -65,3 +68,37 @@ window.addEventListener('load', async () => {
 		.on('add',		() => { map._container.style.cursor = 'help'; })
 	}).addTo(map);
 });
+var Mercator = L.TileLayer.extend({
+	options: {
+		tilesCRS: L.CRS.EPSG3395,
+	},
+	_getTiledPixelBounds: function(center) {
+		var pb = L.TileLayer.prototype._getTiledPixelBounds.call(this, center);
+		this._shiftY = this._getShiftY(this._tileZoom);
+		pb.min.y += this._shiftY;
+		pb.max.y += this._shiftY;
+
+		for (var key in this._tiles) {
+			var t = this._tiles[key];
+			L.DomUtil.setPosition(t.el, this._getTilePos(t.coords));
+		}
+
+		return pb;
+	},
+
+	_getTilePos: function(coords) {
+		return L.TileLayer.prototype._getTilePos.call(this, coords).subtract([0, this._shiftY]);
+	},
+
+	_getShiftY: function(zoom) {
+		var map = this._map,
+			pos = map.getCenter(),
+			shift = map.options.crs.project(pos).y - this.options.tilesCRS.project(pos).y;
+
+		return Math.floor(L.CRS.scale(zoom) * shift / 40075016.685578496);
+	},
+})
+L.TileLayer.Mercator = Mercator;
+L.tileLayer.Mercator = function(url, options) {
+	return new Mercator(url, options)
+}

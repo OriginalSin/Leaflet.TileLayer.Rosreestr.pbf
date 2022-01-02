@@ -39,7 +39,7 @@ export default [
         output: { 
             file: 'public/pkk.js',
             format: 'iife',
-            sourcemap: true,
+            sourcemap: false,
             exports: 'auto',
             name: 'Rosreestr',
             globals: {
@@ -90,7 +90,7 @@ export default [
 				file: 'public/dataManager.js',
 				format: 'iife',
 				name: 'DataManager',
-				sourcemap: true,
+				sourcemap: false,
 				globals: {
 					'leaflet': 'L'
 				},
