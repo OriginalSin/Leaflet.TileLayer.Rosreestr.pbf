@@ -3,6 +3,7 @@ import './cadastre.css';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import PbfLayer from './TileLayer.Rosreestr.pbf.js';
+import './L.Control.Search.js';
 import Popup from './popup.js';
 import Config from './config.js';
 
@@ -12,6 +13,7 @@ window.addEventListener('load', async () => {
 		geoJsonDetected: (geoJson) => {
 			console.log('geoJsonDetected', geoJson);
 		},
+		skipGeo: location.search.indexOf('skipGeo=true') !== -1 || !window.OffscreenCanvas,
 		dataManager: Popup.getDataManager()
 	})
 	.setView([55.64, 37.52], 18)
@@ -84,4 +86,6 @@ window.addEventListener('load', async () => {
 		.on('remove',	() => { map._container.style.cursor = '';	})
 		.on('add',		() => { map._container.style.cursor = 'help'; })
 	}).addTo(map);
+	// const search = L.control.search({
+	// }).addTo(map);
 });

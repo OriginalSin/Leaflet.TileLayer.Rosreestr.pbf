@@ -121,7 +121,8 @@ export default {
 		const it = features[nm];
 		const id = it.attrs.id;
 		const cLayer = getCadastreLayer(id, it.type);
-
+		const isOperHiden = location.search.indexOf('skipGeo=true') !== -1 || !window.OffscreenCanvas ? ' hidden' : '';
+console.log('isOperHiden', isOperHiden);
 		return `
 			<div class="cadItem">
 				${cadNav(nm, features, id, cLayer.title)}
@@ -131,7 +132,7 @@ export default {
 					</tbody>
 					</table>
 				</div>
-				<div class="operCont">
+				<div class="operCont${isOperHiden}">
 					<button class="ShowObject">Выделить границу</button>
 					<a class="exportIcon notVisible" target="_blank" href="" title="Экспорт в GeoJSON"></a>
 					<span class="search notVisible">Поиск информации...</span>

@@ -36,6 +36,7 @@ onmessage = function(evt) {
 			});
 			break;
 		case 'msqr':
+			if (!self.OffscreenCanvas) { break; }
 			let pathPoints = Msqr.MSQR(data.pixels, {
 				path2D: false,
 				maxShapes: 5,

@@ -72,19 +72,21 @@ const setBoundsView = (it) => {
 				}
 			})
 			.on('load', (ev) => {
-				const src = ev.currentTarget;
-				const w = src.width, h = src.height;
-				const ctx = new OffscreenCanvas(w, h).getContext('2d');
-				ctx.drawImage(src, 0, 0, w, h);
-				let imgData = ctx.getImageData(0, 0, w, h);
-				dm.postMessage({
-					cmd: 'msqr',
-					pixels: imgData.data.buffer,
-					width: w,
-					height: h,
-					channels: 4,
-					it: it
-				}, [imgData.data.buffer]);
+				if (!map.skipGeo) {
+					const src = ev.currentTarget;
+					const w = src.width, h = src.height;
+					const ctx = new OffscreenCanvas(w, h).getContext('2d');
+					ctx.drawImage(src, 0, 0, w, h);
+					let imgData = ctx.getImageData(0, 0, w, h);
+					dm.postMessage({
+						cmd: 'msqr',
+						pixels: imgData.data.buffer,
+						width: w,
+						height: h,
+						channels: 4,
+						it: it
+					}, [imgData.data.buffer]);
+				}
 			})
 			.addTo(map);
 	};
@@ -177,7 +179,9 @@ const toggleSearch = (flag) => {
 let itemsArr;
 export default {
 	getDataManager: () => {
-		const dm = L.DomUtil.create('canvas', '').transferControlToOffscreen ? new Worker("dataManager.js") : null;
+		// const isTransferControlToOffscreen = L.DomUtil.create('canvas', '').transferControlToOffscreen;
+		// const dm = isTransferControlToOffscreen ? new Worker("dataManager.js") : null;
+		const dm = new Worker("dataManager.js");
 		dm.onmessage = msg => {
 			const data = msg.data;
 			const {cmd, url, feature, items, coords, pcoords, prefix, point, nm} = data;

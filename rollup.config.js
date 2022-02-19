@@ -2,7 +2,7 @@ import { babel } from '@rollup/plugin-babel';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import css from 'rollup-plugin-css-porter';
-import { uglify } from "rollup-plugin-uglify";
+// import { uglify } from "rollup-plugin-uglify";
 
 const extensions = [
   '.js', '.jsx', '.ts', '.tsx', '.css'
@@ -56,7 +56,7 @@ export default [
                 exclude: ['node_modules/@babel/**', 'node_modules/core-js/**'],
                 include: ['src/**']
             }),
-			uglify()
+			// uglify()
         ],
     },
     {
@@ -107,7 +107,7 @@ export default [
 				babelHelpers: 'bundled',
 				include: ['src/**/*'],
 			}),
-			uglify()
+			// uglify()
 		],    
 	}
 ];

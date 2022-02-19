@@ -1,3 +1,23 @@
+html, body {
+    padding: 0px;
+    margin: 0px;
+}
+#map {
+    width: 100%;
+    height: calc(100vh - 5px);
+}
+.leaflet-left .leaflet-control.search {
+    margin-left: 56px;
+    margin-top: -64px;
+}
+.leaflet-left .leaflet-control.search i {
+	width: 22px;
+    height: 22px;
+    display: inline-block;
+    position: absolute;
+	background-image: url("data:image/svg+xml,%3csvg width='22' height='22' viewBox='0 0 22 22' stroke='black' stroke-width='1.8' fill='none' xmlns='http://www.w3.org/2000/svg'%3e %3ccircle cx='9' cy='9' r='8.1'/%3e %3cpath d='M15 15L21 21' stroke-linecap='round'/%3e %3c/svg%3e");
+}
+
 /* added css for cadastre Popup */
 .cadInfo .cadNum {
     font-weight: bold;
@@ -64,6 +84,9 @@
     border-radius: 4px;
     box-shadow: 0px 3px 4.7px 0.3px rgba(0, 0, 0, 0.24);
 }
+.cadInfo .operCont.hidden {
+	display: none;
+}
 .cadInfo .operCont {
 	position: relative;
 	height: 34px;
@@ -113,14 +136,6 @@
     margin-top: 12px;
 }
 
-html, body {
-    padding: 0px;
-    margin: 0px;
-}
-#map {
-    width: 100%;
-    height: calc(100vh - 5px);
-}
 /* required styles */
 
 .leaflet-pane,
